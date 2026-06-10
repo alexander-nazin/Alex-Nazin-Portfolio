@@ -87,9 +87,9 @@
     font-weight: 700 !important;
     letter-spacing: -0.03em !important;
   }
-  /* Strips serifs away, replacing emphasis with Space Grotesk weights */
+  /* Strips serifs away, replacing emphasis with Space Grotesk weights natively */
   .font-serif {
-    font-family: var(--font-serif), sans-serif !important;
+    font-family: var(--font-heading), sans-serif !important;
     font-style: normal !important;
     font-weight: 500;
   }
