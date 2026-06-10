@@ -401,7 +401,7 @@ export default function PortfolioApp() {
           <AboutSection />
         </OrchestratedSection>
         
-        <OrchestratedSection zIndex={3} exitType="none" marginTop="-100dvh">
+        <OrchestratedSection zIndex={3} exitType="none" marginTop="-100svh">
           <ServicesSection />
         </OrchestratedSection>
         
@@ -414,7 +414,7 @@ export default function PortfolioApp() {
           zIndex={4}
           exitType="shade"
           trackHeight="200vh"
-          marginTop="-100dvh"
+          marginTop="-100svh"
           disableRotate
           alignTop
           entryUnshade
