@@ -683,13 +683,9 @@ export default function ToolsSection() {
   
   // Static-fade background that tracks entry progress and exit scroll progress dynamically
   const bgOpacity = useTransform(
-    [entryProgress, scrollYProgress],
-    ([latestEntry, latestScroll]) => {
-      if (latestScroll > 0) {
-        return latestScroll < 0.46 ? 1 : 0
-      }
-      return latestEntry
-    }
+    scrollYProgress,
+    [0, 0.1, 0.46, 0.52],
+    [0, 1, 1, 0]
   )
   
   const textOpacity = useTransform(scrollYProgress, (pos) => (pos < 0.46 ? 1 : 0))
@@ -802,3 +798,4 @@ export default function ToolsSection() {
     </div>
   )
 }
+
