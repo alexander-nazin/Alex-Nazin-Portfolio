@@ -395,6 +395,7 @@ export default function PortfolioApp() {
           exitType="shade"
           trackHeight="230vh"
           dynamicHeight={true}
+          alignTop={true} // Forces the sticky container to stick exactly at the top (top: 0) instead of floating or sliding
           scrollBuffer={1450} // Increased scroll buffer for delayed Services entry
         >
           <AboutSection />

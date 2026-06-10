@@ -33,7 +33,7 @@ export default function LandingSection() {
   return (
     <section 
       id="landing" 
-      className="sticky top-0 z-[1] h-screen lg:h-screen h-[100dvh] w-full flex flex-col items-center justify-center overflow-hidden"
+      className="sticky top-0 z-[1] h-[100lvh] lg:h-screen w-full flex flex-col items-center justify-center overflow-hidden"
       style={{
         transform: 'translate3d(0,0,0)',
         WebkitTransform: 'translate3d(0,0,0)'
