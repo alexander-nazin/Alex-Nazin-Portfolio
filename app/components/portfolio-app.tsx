@@ -183,8 +183,15 @@ function OrchestratedSection({
   const [viewportHeight, setViewportHeight] = useState(600)
 
   useEffect(() => {
+    let lastHeight = window.innerHeight
     const updateHeight = () => {
-      setViewportHeight(window.innerHeight)
+      const currentHeight = window.innerHeight
+      // Prevent rapid layout height shifts caused by the mobile address bar expanding/collapsing.
+      // We only update the height threshold if the resize is greater than 100px (e.g., orientation change).
+      if (Math.abs(currentHeight - lastHeight) > 100) {
+        setViewportHeight(currentHeight)
+        lastHeight = currentHeight
+      }
       if (contentRef.current) {
         setContentHeight(contentRef.current.offsetHeight)
       }
@@ -381,7 +388,7 @@ export default function PortfolioApp() {
           <AboutSection />
         </OrchestratedSection>
         
-        <OrchestratedSection zIndex={3} exitType="none" marginTop="-100vh">
+        <OrchestratedSection zIndex={3} exitType="none" marginTop="-100dvh">
           <ServicesSection />
         </OrchestratedSection>
         
@@ -394,7 +401,7 @@ export default function PortfolioApp() {
           zIndex={4}
           exitType="shade"
           trackHeight="200vh"
-          marginTop="-100vh"
+          marginTop="-100dvh"
           disableRotate
           alignTop
           entryUnshade

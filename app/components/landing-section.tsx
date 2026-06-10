@@ -31,7 +31,7 @@ export default function LandingSection() {
   const nameLetters = 'ALEX NAZIN'.split('')
   
   return (
-    <section id="landing" className="sticky top-0 z-[1] h-screen flex flex-col items-center justify-center overflow-hidden">
+    <section id="landing" className="sticky top-0 z-[1] h-[100dvh] w-full flex flex-col items-center justify-center overflow-hidden">
       {/* Animated pattern background */}
       <div className="absolute inset-0">
         <AnimatedBg />
