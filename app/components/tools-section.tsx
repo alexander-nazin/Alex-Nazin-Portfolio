@@ -83,7 +83,7 @@ interface BlueprintGridProps {
 const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLines, cardsLaunched, canvasCardsActive }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imagesRef = useRef<HTMLImageElement[]>([])
-
+  
   useEffect(() => {
     imagesRef.current = TOOLS_LIST.map((tool) => {
       const img = new window.Image()
@@ -91,7 +91,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       return img
     })
   }, [])
-
+  
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -105,7 +105,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     let h = canvas.height = clientH * dpr
     canvas.style.width = `${clientW}px`
     canvas.style.height = `${clientH}px`
-
+    
     const handleResize = () => {
       if (canvasRef.current) {
         dpr = window.devicePixelRatio || 1
@@ -117,8 +117,9 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
         canvasRef.current.style.height = `${resizedH}px`
       }
     }
+    
     window.addEventListener('resize', handleResize)
-
+    
     const mouse = { x: -2000, y: -2000 }
     const trailMouse = { x: -2000, y: -2000 }
     let targetInfluence = 0
@@ -127,7 +128,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     let currentMultiplier = 1.0
     let isMouseDown = false
     let isMouseOverCanvas = false
-
+    
     const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect()
       const isStickyActive = Math.abs(rect.top) < 10
@@ -136,7 +137,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
         e.clientX <= rect.right &&
         e.clientY >= rect.top &&
         e.clientY <= rect.bottom
-
+        
       if (isStickyActive && isInside) {
         mouse.x = e.clientX
         mouse.y = e.clientY
@@ -148,22 +149,22 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
         isMouseOverCanvas = false
       }
     }
-
+    
     const handleMouseLeave = () => {
       targetInfluence = 0
       isMouseOverCanvas = false
     }
-
+    
     const handleMouseDown = () => {
       if (isMouseOverCanvas) {
         isMouseDown = true
       }
     }
-
+    
     const handleMouseUp = () => {
       isMouseDown = false
     }
-
+    
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length > 0) {
         const rect = canvas.getBoundingClientRect()
@@ -184,7 +185,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
         }
       }
     }
-
+    
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length > 0) {
         const rect = canvas.getBoundingClientRect()
@@ -208,13 +209,13 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
         }
       }
     }
-
+    
     const handleTouchEnd = () => {
       isMouseDown = false
       isMouseOverCanvas = false
       targetInfluence = 0
     }
-
+    
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
     window.addEventListener('mouseleave', handleMouseLeave, { passive: true })
     window.addEventListener('mousedown', handleMouseDown, { passive: true })
@@ -223,14 +224,14 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     window.addEventListener('touchmove', handleTouchMove, { passive: true })
     window.addEventListener('touchend', handleTouchEnd, { passive: true })
     window.addEventListener('touchcancel', handleTouchEnd, { passive: true })
-
+    
     const draw = () => {
       ctx.clearRect(0, 0, w, h)
       ctx.save()
       ctx.scale(dpr, dpr)
       const screenW = document.documentElement.clientWidth
       const screenH = document.documentElement.clientHeight
-
+      
       if (trailMouse.x === -2000) {
         trailMouse.x = mouse.x
         trailMouse.y = mouse.y
@@ -238,11 +239,10 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
         trailMouse.x += (mouse.x - trailMouse.x) * 0.15
         trailMouse.y += (mouse.y - trailMouse.y) * 0.15
       }
-
+      
       currentInfluence += (targetInfluence - currentInfluence) * 0.2
       targetMultiplier = isMouseDown ? -1.0 : 1.0
       currentMultiplier += (targetMultiplier - currentMultiplier) * 0.2
-
       const influenceRadius = currentInfluence
       const strength = 1.0
       const isMobileDevice = screenW < 768
@@ -256,23 +256,22 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       const nodesRowOffset = gridLines.horizontal.filter(y => y < gridLines.padTop).length
       const numCols = gridLines.vertical.length
       const numRows = gridLines.horizontal.length
-
+      
       if (numCols === 0 || numRows === 0) {
         ctx.restore()
         animId = requestAnimationFrame(draw)
         return
       }
-
+      
       const scrollVal = scrollYProgress.get()
       const lineProgress = Math.max(0, Math.min(1, (scrollVal - 0.52) / (0.72 - 0.52)))
       const lineOpacity = Math.max(0, Math.min(1, (scrollVal - 0.52) / (0.56 - 0.52)))
       const dotProgress = Math.max(0, Math.min(1, (scrollVal - 0.68) / (0.78 - 0.68)))
-
       ctx.lineWidth = 1
-
+      
       // Declare nodes outside so both loops and sub-functions can safely access them
       const nodes: { x: number; y: number }[][] = []
-
+      
       if (cardsLaunched) {
         for (let i = 0; i < numCols; i++) {
           nodes[i] = []
@@ -293,7 +292,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             nodes[i][j] = { x: tx, y: ty }
           }
         }
-
+        
         const getNode = (col: number, row: number) => {
           if (nodes && nodes[col] && nodes[col][row]) {
             return nodes[col][row]
@@ -304,7 +303,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
           const baseY = gridLines.horizontal && gridLines.horizontal[row] !== undefined
             ? gridLines.horizontal[row]
             : ((gridLines.horizontal && gridLines.horizontal[0] !== undefined ? gridLines.horizontal[0] : 0) + row * squareSize)
-
           const dx = trailMouse.x - baseX
           const dy = trailMouse.y - baseY
           const dist = Math.sqrt(dx * dx + dy * dy)
@@ -318,14 +316,14 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
           }
           return { x: tx, y: ty }
         }
-
+        
         // Draw horizontal stretches (with optional chaining to prevent undefined indexing during resize)
         for (let j = 0; j < numRows; j++) {
           for (let i = 0; i < numCols - 1; i++) {
             const p1 = nodes[i]?.[j]
             const p2 = nodes[i+1]?.[j]
             if (!p1 || !p2) continue
-
+            
             const midX = (p1.x + p2.x) / 2
             const midY = (p1.y + p2.y) / 2
             const dx = midX - trailMouse.x
@@ -356,14 +354,14 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             ctx.stroke()
           }
         }
-
+        
         // Draw vertical stretches (with optional chaining to prevent undefined indexing during resize)
         for (let i = 0; i < numCols; i++) {
           for (let j = 0; j < numRows - 1; j++) {
             const p1 = nodes[i]?.[j]
             const p2 = nodes[i]?.[j+1]
             if (!p1 || !p2) continue
-
+            
             const midX = (p1.x + p2.x) / 2
             const midY = (p1.y + p2.y) / 2
             const dx = midX - trailMouse.x
@@ -394,13 +392,12 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             ctx.stroke()
           }
         }
-
+        
         // Draw pinpoint crossing dots (with optional chaining to prevent undefined indexing during resize)
         for (let i = 0; i < numCols; i++) {
           for (let j = 0; j < numRows; j++) {
             const node = nodes[i]?.[j]
             if (!node) continue
-
             const dx = node.x - trailMouse.x
             const dy = node.y - trailMouse.y
             const dist = Math.sqrt(dx * dx + dy * dy)
@@ -420,7 +417,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             ctx.fill()
           }
         }
-
+        
         if (canvasCardsActive) {
           TOOLS_LIST.forEach((tool, idx) => {
             const cardPos = layout[idx]
@@ -432,7 +429,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             const c4 = getNode(colIndex, rowIndex + cardPos.h)
             const cardW = cardPos.w * squareSize + 2
             const cardH = cardPos.h * squareSize + 2
-
+            
             for (let u = 0; u < cardPos.w; u++) {
               for (let v = 0; v < cardPos.h; v++) {
                 const sc1 = getNode(colIndex + u, rowIndex + v)
@@ -449,7 +446,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
                 ctx.fill()
               }
             }
-
             ctx.save()
             const ax = (c2.x - c1.x) / cardW
             const ay = (c2.y - c1.y) / cardW
@@ -458,7 +454,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             ctx.transform(ax, ay, bx, by, c1.x, c1.y)
             ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'
             ctx.fillRect(0, 0, cardW, cardH)
-
+            
             const logoImg = imagesRef.current[idx]
             if (logoImg && logoImg.complete) {
               const maxW = cardW * 0.6
@@ -525,7 +521,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       animId = requestAnimationFrame(draw)
     }
     draw()
-
     return () => {
       cancelAnimationFrame(animId)
       window.removeEventListener('resize', handleResize)
@@ -539,7 +534,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       window.removeEventListener('touchcancel', handleTouchEnd)
     }
   }, [cardsLaunched, canvasCardsActive, gridLines, scrollYProgress])
-
+  
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ display: 'block' }} />
 }
 
@@ -578,14 +573,14 @@ export default function ToolsSection() {
   const [cardsLaunched, setCardsLaunched] = useState(false)
   const [canvasCardsActive, setCanvasCardsActive] = useState(false)
   const [gridData, setGridData] = useState<{ vertical: number[], horizontal: number[], squareSize: number, cols: number, rows: number, padLeft: number, padTop: number }>({ vertical: [], horizontal: [], squareSize: 50, cols: 0, rows: 0, padLeft: 0, padTop: 0 })
-
+  
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
-
+  
   useEffect(() => {
     const calculateGrid = () => {
       const w = document.documentElement.clientWidth
@@ -607,18 +602,18 @@ export default function ToolsSection() {
       while (hPos >= 0) { horizontal.push(hPos); hPos -= squareSize }
       hPos = padTop + squareSize
       while (hPos <= h) { horizontal.push(hPos); hPos += squareSize }
-
       vertical.sort((a, b) => a - b)
       horizontal.sort((a, b) => a - b)
       setGridData({ vertical, horizontal, squareSize, cols, rows, padLeft, padTop })
     }
+    
     calculateGrid()
     window.addEventListener('resize', calculateGrid)
     return () => window.removeEventListener('resize', calculateGrid)
   }, [])
-
+  
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] })
-
+  
   useEffect(() => {
     if (!scrollYProgress) return
     const handleChange = (latest: number) => {
@@ -628,7 +623,7 @@ export default function ToolsSection() {
     const unsubscribe = scrollYProgress.onChange(handleChange)
     return () => unsubscribe()
   }, [scrollYProgress])
-
+  
   useEffect(() => {
     let timer: NodeJS.Timeout
     if (cardsLaunched) {
@@ -640,30 +635,31 @@ export default function ToolsSection() {
     }
     return () => clearTimeout(timer)
   }, [cardsLaunched])
-
+  
   if (!cardsLaunched && canvasCardsActive) {
     setCanvasCardsActive(false)
   }
-
+  
   useEffect(() => {
     if (typeof window === 'undefined') return
     const lenis = (window as any).lenis
     if (!lenis || !cardsLaunched) return
     lenis.stop()
-
     document.documentElement.style.setProperty('overflow', 'auto', 'important')
     document.documentElement.style.setProperty('overflow-y', 'scroll', 'important')
+    
     const timer = setTimeout(() => {
       lenis.start()
       document.documentElement.style.removeProperty('overflow')
       document.documentElement.style.removeProperty('overflow-y')
     }, 2000)
+    
     return () => {
       clearTimeout(timer)
       lenis.start()
     }
   }, [cardsLaunched])
-
+  
   const bgOpacity = useTransform(scrollYProgress, (pos) => (pos < 0.46 ? 1 : 0))
   const textOpacity = useTransform(scrollYProgress, (pos) => (pos < 0.46 ? 1 : 0))
   const lightBgOpacity = useTransform(scrollYProgress, (pos) => (pos < 0.46 ? 0 : 1))
@@ -673,7 +669,7 @@ export default function ToolsSection() {
   const colOffset = Math.max(0, Math.floor((gridData.cols - (isMobile ? 8 : 26)) / 2))
   const rowOffset = Math.max(0, Math.floor((gridData.rows - (isMobile ? 14 : 11)) / 2))
   const lineWidth = 2
-
+  
   const cardVariants = {
     hidden: {
       opacity: 0,
@@ -685,39 +681,43 @@ export default function ToolsSection() {
     },
     visible: { opacity: 1, pointerEvents: "auto" as const, transition: { duration: 0.01 } }
   }
-
+  
   const crossVariants = {
     hidden: (idx: number) => ({ opacity: 0, scale: 0, transition: { duration: 0.2, ease: "easeIn", delay: (5 - idx) * 0.05 + 0.35 } }),
     visible: (idx: number) => ({ opacity: 1, scale: 1, transition: { type: "spring", stiffness: 150, damping: 12, delay: idx * 0.1 } })
   }
-
+  
   const fillVariants = {
     hidden: (idx: number) => ({ clipPath: "inset(0% 100% 100% 0%)", transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: (5 - idx) * 0.05 + 0.15 } }),
     visible: (idx: number) => ({ clipPath: "inset(0% 0% 0% 0%)", transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: idx * 0.1 + 0.35 } })
   }
-
+  
   const contentVariants = {
     hidden: (idx: number) => ({ opacity: 0, y: 15, scale: 0.85, transition: { duration: 0.2, ease: "easeIn", delay: (5 - idx) * 0.05 } }),
     visible: (idx: number) => ({ opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 120, damping: 14, delay: idx * 0.1 + 0.90 } })
   }
-
+  
   return (
     <div ref={containerRef} id="tools" className="relative h-[450vh] w-full">
-      <div className="sticky top-0 left-0 h-screen w-full flex items-center justify-center overflow-hidden z-[4]">
+      <div className="sticky top-0 left-0 h-[100svh] lg:h-screen w-full flex items-center justify-center overflow-hidden z-[4]">
         <motion.div style={{ opacity: bgOpacity }} className="absolute inset-0 z-[2]">
           <AnimatedBg />
           <div className="absolute inset-0 bg-gradient-to-b from-[#212121]/30 via-transparent to-[#212121]/50" />
         </motion.div>
+        
         <motion.div style={{ opacity: lightBgOpacity }} className="absolute inset-0 bg-[#ffffff] z-[1]" />
+        
         <motion.div style={{ opacity: lightBgOpacity }} className="absolute inset-0 z-[2] pointer-events-none">
           <BlueprintGrid scrollYProgress={scrollYProgress} gridLines={gridData} cardsLaunched={cardsLaunched} canvasCardsActive={canvasCardsActive} />
         </motion.div>
+        
         <motion.div style={{ opacity: textOpacity }} className="absolute inset-0 flex items-center justify-center pointer-events-none z-[3]">
           <motion.div style={{ scale: textScale, transformOrigin }} className="relative flex flex-col items-end w-fit h-fit px-8">
             <h2 className="font-heading text-[15vw] font-bold leading-[0.9] tracking-tight text-white uppercase select-none">Creative</h2>
             <p className="font-mono text-[2.2vw] font-light tracking-widest text-[#729E84] uppercase whitespace-nowrap leading-none mt-6 select-none">Development Stack</p>
           </motion.div>
         </motion.div>
+        
         <div className="absolute inset-0 w-full h-full z-[4] pointer-events-none">
           <div className="relative w-full h-full">
             {gridData.squareSize > 0 && TOOLS_LIST.map((tool, idx) => {

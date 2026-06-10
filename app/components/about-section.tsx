@@ -238,7 +238,7 @@ export default function AboutSection() {
                 
                 {/* Mobile Version Portrait (Approach 2) — Placed between title and text swap with baseline grounding */}
                 <div className="lg:hidden flex flex-col items-center pt-1 pb-2">
-                  <div className="relative w-[110px] sm:w-[130px]">
+                  <div className="relative w-[170px] sm:w-[200px]">
                     <div className="relative w-full">
                       <Image
                         src="/images/alex-portrait.webp"
