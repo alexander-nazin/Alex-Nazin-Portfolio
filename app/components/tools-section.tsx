@@ -588,9 +588,9 @@ export default function ToolsSection() {
       const isMob = w < 768
       const padX = isMob ? 40 : 0
       
-      // Header safety offsets: 130px for mobile nav + spacious safe breathing space, 50px bottom safety
-      const headerOffset = isMob ? 130 : 0
-      const bottomOffset = isMob ? 50 : 0
+      // Header safety offsets: 110px for mobile nav + spacious safe breathing space, 40px bottom safety margin
+      const headerOffset = isMob ? 110 : 0
+      const bottomOffset = isMob ? 40 : 0
       const activeHeight = isMob ? (h - headerOffset - bottomOffset) : h
       
       // Dynamically scale down the square size on short mobile screens using activeHeight to guarantee tiles fit cleanly
@@ -731,8 +731,8 @@ export default function ToolsSection() {
   return (
     <div ref={containerRef} id="tools" className="relative h-[450vh] w-full">
       <div className="sticky top-0 left-0 h-screen w-full flex items-center justify-center overflow-hidden z-[4]">
-        {/* Changed to absolute inset-0 to let the background container scroll up naturally with regular lift */}
-        <motion.div style={{ opacity: bgOpacity }} className="absolute inset-0 z-[2] pointer-events-none">
+        {/* Changed back to fixed inset-0 with pointer-events-none to make the background static again without breaking lower-layer interactivity */}
+        <motion.div style={{ opacity: bgOpacity }} className="fixed inset-0 z-[2] pointer-events-none">
           <AnimatedBg />
           <div className="absolute inset-0 bg-gradient-to-b from-[#212121]/30 via-transparent to-[#212121]/50 pointer-events-none" />
         </motion.div>
