@@ -684,7 +684,7 @@ export default function ToolsSection() {
   // Static-fade background that tracks entry progress and exit scroll progress dynamically
   const bgOpacity = useTransform(
     scrollYProgress,
-    [0, 0.1, 0.46, 0.52],
+    [0, 0.1, 0.46, 0.46],
     [0, 1, 1, 0]
   )
   
@@ -798,4 +798,3 @@ export default function ToolsSection() {
     </div>
   )
 }
-
