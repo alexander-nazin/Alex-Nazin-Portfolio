@@ -408,13 +408,22 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       const nodesColOffset = gridLines.vertical.filter(x => x < gridLines.padLeft).length
       const nodesRowOffset = gridLines.horizontal.filter(y => y < gridLines.padTop).length
       
-      // Gradually evaluates point-specific opacity based on distance to mouse
+      // Gradually evaluates point-specific line opacity based on distance to mouse (fades on hover, darkens on click)
       const getOpacityAtPoint = (dist: number) => {
         if (dist >= influenceRadius || dist <= 0) return 0.14
         const force = (influenceRadius - dist) / influenceRadius
         const hoverFactor = Math.sin(force * Math.PI / 2)
-        const hoveredOpacity = 0.14 - 0.09 * hoverFactor // fades/brightens to 0.05 on hover
-        return hoveredOpacity + (0.35 - hoveredOpacity) * clickFactor // darkens to 0.35 on click
+        const hoveredOpacity = 0.14 - 0.05 * hoverFactor // gently decrease to 0.09 on hover (brighter)
+        return hoveredOpacity + (0.22 - hoveredOpacity) * clickFactor // gently increase to 0.22 on click (darker)
+      }
+
+      // Evaluates dot-specific opacity (fades on hover, darkens on click)
+      const getDotOpacityAtPoint = (dist: number) => {
+        if (dist >= influenceRadius || dist <= 0) return 0.45
+        const force = (influenceRadius - dist) / influenceRadius
+        const hoverFactor = Math.sin(force * Math.PI / 2)
+        const hoveredOpacity = 0.45 - 0.10 * hoverFactor // gently decrease to 0.35 on hover (brighter)
+        return hoveredOpacity + (0.60 - hoveredOpacity) * clickFactor // gently increase to 0.60 on click (darker)
       }
       
       if (numCols === 0 || numRows === 0) {
@@ -599,13 +608,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             const dist = Math.sqrt(dx * dx + dy * dy)
             
             let r = 33, g = 33, b = 33
-            let localOpacity = 0.45
-            if (dist < influenceRadius && dist > 0) {
-              const force = (influenceRadius - dist) / influenceRadius
-              const hoverFactor = Math.sin(force * Math.PI / 2)
-              const hoveredOpacity = 0.45 - 0.25 * hoverFactor // fades on hover
-              localOpacity = hoveredOpacity + (0.85 - hoveredOpacity) * clickFactor // darkens on click
-            }
+            const localOpacity = getDotOpacityAtPoint(dist)
             ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${localOpacity * dotProgress})`
             ctx.beginPath()
             ctx.arc(node.x, node.y, 1, 0, Math.PI * 2)
