@@ -99,8 +99,8 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     if (!ctx) return
     let animId: number
     let dpr = window.devicePixelRatio || 1
-    const clientW = document.documentElement.clientWidth
-    const clientH = document.documentElement.clientHeight
+    const clientW = window.innerWidth
+    const clientH = window.innerHeight
     let w = canvas.width = clientW * dpr
     let h = canvas.height = clientH * dpr
     canvas.style.width = `${clientW}px`
@@ -109,8 +109,8 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     const handleResize = () => {
       if (canvasRef.current) {
         dpr = window.devicePixelRatio || 1
-        const resizedW = document.documentElement.clientWidth
-        const resizedH = document.documentElement.clientHeight
+        const resizedW = window.innerWidth
+        const resizedH = window.innerHeight
         w = canvasRef.current.width = resizedW * dpr
         h = canvasRef.current.height = resizedH * dpr
         canvasRef.current.style.width = `${resizedW}px`
@@ -229,8 +229,8 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       ctx.clearRect(0, 0, w, h)
       ctx.save()
       ctx.scale(dpr, dpr)
-      const screenW = document.documentElement.clientWidth
-      const screenH = document.documentElement.clientHeight
+      const screenW = window.innerWidth
+      const screenH = window.innerHeight
       
       if (trailMouse.x === -2000) {
         trailMouse.x = mouse.x
@@ -269,7 +269,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       const dotProgress = Math.max(0, Math.min(1, (scrollVal - 0.68) / (0.78 - 0.68)))
       ctx.lineWidth = 1
       
-      // Declare nodes outside so both loops and sub-functions can safely access them
       const nodes: { x: number; y: number }[][] = []
       
       if (cardsLaunched) {
@@ -317,7 +316,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
           return { x: tx, y: ty }
         }
         
-        // Draw horizontal stretches (with optional chaining to prevent undefined indexing during resize)
         for (let j = 0; j < numRows; j++) {
           for (let i = 0; i < numCols - 1; i++) {
             const p1 = nodes[i]?.[j]
@@ -355,7 +353,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
           }
         }
         
-        // Draw vertical stretches (with optional chaining to prevent undefined indexing during resize)
         for (let i = 0; i < numCols; i++) {
           for (let j = 0; j < numRows - 1; j++) {
             const p1 = nodes[i]?.[j]
@@ -393,7 +390,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
           }
         }
         
-        // Draw pinpoint crossing dots (with optional chaining to prevent undefined indexing during resize)
         for (let i = 0; i < numCols; i++) {
           for (let j = 0; j < numRows; j++) {
             const node = nodes[i]?.[j]
@@ -583,8 +579,8 @@ export default function ToolsSection() {
   
   useEffect(() => {
     const calculateGrid = () => {
-      const w = document.documentElement.clientWidth
-      const h = document.documentElement.clientHeight
+      const w = window.innerWidth
+      const h = window.innerHeight
       const isMob = w < 768
       const padX = isMob ? 40 : 0
       
@@ -594,8 +590,8 @@ export default function ToolsSection() {
       const activeHeight = isMob ? (h - headerOffset - bottomOffset) : h
       
       // Dynamically scale down the square size on short mobile screens using activeHeight to guarantee tiles fit cleanly
-      const squareSize = isMob 
-        ? Math.min(Math.floor((w - padX) / 8), Math.floor(activeHeight / 14)) 
+      const squareSize = isMob
+        ? Math.min(Math.floor((w - padX) / 8), Math.floor(activeHeight / 14))
         : 50
         
       const cols = isMob ? 8 : Math.floor(w / squareSize)
@@ -603,7 +599,7 @@ export default function ToolsSection() {
       const padLeft = Math.floor((w - (cols * squareSize)) / 2)
       
       // Pad top starts below the header offset on mobile to ensure top tile never overlaps or touches nav header
-      const padTop = isMob 
+      const padTop = isMob
         ? headerOffset + Math.floor((activeHeight - (rows * squareSize)) / 2)
         : Math.floor((h - (rows * squareSize)) / 2)
         
@@ -726,7 +722,7 @@ export default function ToolsSection() {
   
   return (
     <div ref={containerRef} id="tools" className="relative h-[450vh] w-full">
-      <div className="sticky top-0 left-0 h-screen w-full flex items-center justify-center overflow-hidden z-[4]">
+      <div className="sticky top-0 left-0 h-[100dvh] w-full flex items-center justify-center overflow-hidden z-[4]">
         {/* Changed back to fixed inset-0 with pointer-events-none to make the background static again without breaking lower-layer interactivity */}
         <motion.div style={{ opacity: bgOpacity }} className="fixed inset-0 z-[2] pointer-events-none">
           <AnimatedBg />
