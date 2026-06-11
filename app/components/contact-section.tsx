@@ -10,13 +10,33 @@ export default function ContactSection() {
   const [animationCompleted, setAnimationCompleted] = useState(false)
   const emailStr = 'alexnz.ser@gmail.com'
   const sectionRef = useRef<HTMLDivElement>(null)
+  
+  const [isMobile, setIsMobile] = useState(false)
+  const [isMobileRevealed, setIsMobileRevealed] = useState(false)
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Safely prune timers on component unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current)
+      }
+    }
+  }, [])
 
   // Track the scroll entry progress of ContactSection
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start end', 'start start']
   })
-
+  
   // 1. Top Part (Left): Slides in dynamically from Left as you scroll
   const topX = useTransform(scrollYProgress, [0.2, 0.8], ["-100%", "0%"])
   // 2. Bottom Part (Right): Slides in dynamically from Right as you scroll
@@ -28,6 +48,43 @@ export default function ContactSection() {
       setEmailCopied(true)
       setTimeout(() => setEmailCopied(false), 2000)
     } catch { /* fallback */ }
+  }
+
+  const handleBlockTap = async () => {
+    if (isMobile) {
+      if (!isMobileRevealed) {
+        // Step 1: Open the curtain and start typing, but do not copy yet
+        setIsMobileRevealed(true)
+        setIsHovered(true)
+        
+        // Start 5-second auto-close inactivity timer
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+        closeTimerRef.current = setTimeout(() => {
+          handleClose()
+        }, 5000)
+      } else {
+        // Step 2: Copy to clipboard on the second tap
+        await copyEmail()
+        
+        // Reset/extend close timer to 2 seconds following successful copy
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+        closeTimerRef.current = setTimeout(() => {
+          handleClose()
+        }, 2000)
+      }
+    } else {
+      // Desktop copies immediately on click, as reveal is already handled by hover
+      await copyEmail()
+    }
+  }
+
+  const handleClose = () => {
+    setIsMobileRevealed(false)
+    setIsHovered(false)
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
   }
 
   // Monitor scroll progress to unlock hover interactions only when the card is fully unified (at 95% scroll progress)
@@ -100,19 +157,24 @@ export default function ContactSection() {
               Time to make something people{" won't "}forget
             </p>
           </motion.div>
-
+          
           {/* Bottom Part: Divided by Thin Line - Slides in dynamically from Right as you scroll */}
           <motion.button
             style={{ x: bottomX }}
-            onClick={copyEmail}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            className={`group/bottom w-full border-t border-[#212121]/15 flex items-center justify-between px-8 py-10 md:px-16 md:py-14 lg:px-20 lg:py-16 min-h-[110px] md:min-h-[140px] relative overflow-hidden text-left focus:outline-none rounded-b-xl bg-[#729E84] text-[#212121] transition-colors duration-500 hover:bg-[#212121] shadow-2xl ${
+            onClick={handleBlockTap}
+            onMouseEnter={!isMobile ? () => setIsHovered(true) : undefined}
+            onMouseLeave={!isMobile ? () => setIsHovered(false) : undefined}
+            className={`group/bottom w-full border-t border-[#212121]/15 flex items-center justify-between px-8 py-10 md:px-16 md:py-14 lg:px-20 lg:py-16 min-h-[110px] md:min-h-[140px] relative overflow-hidden text-left focus:outline-none rounded-b-xl bg-[#729E84] text-[#212121] transition-colors duration-500 shadow-2xl ${
+              !isMobile ? 'hover:bg-[#212121]' : ''
+            } ${
               animationCompleted ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none'
             }`}
           >
             {/* Curtain overlay covering from top */}
-            <div className="absolute inset-0 bg-[#212121] transform -translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/bottom:translate-y-0 z-20" />
+            <div 
+              className="absolute inset-0 bg-[#212121] transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] z-20"
+              style={{ transform: isHovered ? 'translateY(0)' : 'translateY(-100%)' }}
+            />
             
             {/* Left Part: Email (revealed above the curtain with typed effect) */}
             <div className="relative z-30 flex flex-col justify-center pr-4 text-[#729E84]">
@@ -145,7 +207,6 @@ export default function ContactSection() {
           </motion.button>
         </div>
       </div>
-
       {/* Footer Area - locked at the bottom of the viewport with matching edge gutters */}
       <div className="w-full px-8 md:px-12 lg:px-16 xl:px-20 pb-8 flex items-center justify-between select-none border-t border-white/[0.06] pt-6 z-10">
         <p className="text-[12px] text-white/25 font-mono">© Alex Nazin</p>
