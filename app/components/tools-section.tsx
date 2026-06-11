@@ -129,7 +129,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     let isMouseDown = false
     let isMouseOverCanvas = false
     
-    // Stable persistent particle net coordinates
     interface Particle {
       x: number
       y: number
@@ -138,9 +137,9 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       baseX: number
       baseY: number
     }
+    
     let particles: Particle[][] = []
     
-    // Active wavefronts propagating across the grid
     interface Pluck {
       x: number
       y: number
@@ -151,7 +150,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     const numCols = gridLines.vertical.length
     const numRows = gridLines.horizontal.length
     
-    // Reconstruct particles grid when screen dimensions update
     let rebuild = false
     if (particles.length !== numCols) {
       rebuild = true
@@ -184,7 +182,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     
     const handleMouseMove = (e: MouseEvent) => {
       const isMobileDevice = window.innerWidth < 768
-      if (isMobileDevice) return 
+      if (isMobileDevice) return
       
       const rect = canvas.getBoundingClientRect()
       const isStickyActive = Math.abs(rect.top) < 10
@@ -220,7 +218,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
         e.clientX <= rect.right &&
         e.clientY >= rect.top &&
         e.clientY <= rect.bottom
-
       if (isMobileDevice) {
         if (isStickyActive && isInside) {
           const tapX = e.clientX - rect.left
@@ -276,7 +273,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     
     const handleTouchMove = (e: TouchEvent) => {
       const isMobileDevice = window.innerWidth < 768
-      if (isMobileDevice) return // Banish drag/slide interactions on mobile
+      if (isMobileDevice) return
       
       if (e.touches.length > 0) {
         const rect = canvas.getBoundingClientRect()
@@ -331,12 +328,10 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
         trailMouse.y += (mouse.y - trailMouse.y) * 0.15
       }
       
-      // Extreme snap-back and damping settings (Plucked guitar string shivering)
       const stiffness = 0.35
       const damping = 0.72
-      const waveSpeed = 26 // Near-instant propagation velocity
+      const waveSpeed = 26
       
-      // Update propagating plucks
       const maxRadius = Math.max(window.innerWidth, window.innerHeight) * 1.3
       for (let pIdx = plucks.length - 1; pIdx >= 0; pIdx--) {
         plucks[pIdx].time += 1
@@ -345,18 +340,15 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
         }
       }
       
-      // Physical Integration: Update nodes independently so they cannot trigger chaotic feedback
       if (numCols > 0 && numRows > 0 && particles.length === numCols) {
         for (let i = 0; i < numCols; i++) {
           for (let j = 0; j < numRows; j++) {
             const p = particles[i]?.[j]
             if (!p) continue
             
-            // Core spring pull back to resting anchor
             let ax = -stiffness * (p.x - p.baseX)
             let ay = -stiffness * (p.y - p.baseY)
             
-            // Pluck intersections precisely as active wave fronts cross them
             for (const pluck of plucks) {
               const dx = p.baseX - pluck.x
               const dy = p.baseY - pluck.y
@@ -364,15 +356,14 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
               if (dist > 0) {
                 const waveRadius = pluck.time * waveSpeed
                 const diff = dist - waveRadius
-                const waveWidth = 20 // Ultra thin, sharp shockwave front
+                const waveWidth = 20
                 if (Math.abs(diff) < waveWidth) {
                   const progress = diff / waveWidth
                   const envelope = Math.cos(progress * Math.PI / 2)
                   const forceFactor = Math.sin(progress * Math.PI) * envelope
-                  const pluckForce = 16.0 // High impact pluck force (BANG!)
+                  const pluckForce = 16.0
                   const decay = Math.max(0, 1 - waveRadius / maxRadius)
                   
-                  // Displace along the radial wave direction vector
                   ax += (dx / dist) * forceFactor * pluckForce * decay
                   ay += (dy / dist) * forceFactor * pluckForce * decay
                 }
@@ -393,7 +384,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       targetMultiplier = isMouseDown ? -1.0 : 1.0
       currentMultiplier += (targetMultiplier - currentMultiplier) * 0.2
       
-      // Evaluates relative click depth factor smoothly (0 for hover, 1 for clicked)
       const clickFactor = (1 - currentMultiplier) / 2
       
       const influenceRadius = currentInfluence
@@ -408,22 +398,19 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       const nodesColOffset = gridLines.vertical.filter(x => x < gridLines.padLeft).length
       const nodesRowOffset = gridLines.horizontal.filter(y => y < gridLines.padTop).length
       
-      // Gradually evaluates point-specific line opacity based on distance to mouse (fades on hover, darkens on click)
       const getOpacityAtPoint = (dist: number) => {
         if (dist >= influenceRadius || dist <= 0) return 0.14
         const force = (influenceRadius - dist) / influenceRadius
         const hoverFactor = Math.sin(force * Math.PI / 2)
-        const hoveredOpacity = 0.14 - 0.05 * hoverFactor // gently decrease to 0.09 on hover (brighter)
-        return hoveredOpacity + (0.22 - hoveredOpacity) * clickFactor // gently increase to 0.22 on click (darker)
+        const hoveredOpacity = 0.14 - 0.05 * hoverFactor
+        return hoveredOpacity + (0.22 - hoveredOpacity) * clickFactor
       }
-
-      // Evaluates dot-specific opacity (fades on hover, darkens on click)
       const getDotOpacityAtPoint = (dist: number) => {
         if (dist >= influenceRadius || dist <= 0) return 0.45
         const force = (influenceRadius - dist) / influenceRadius
         const hoverFactor = Math.sin(force * Math.PI / 2)
-        const hoveredOpacity = 0.45 - 0.10 * hoverFactor // gently decrease to 0.35 on hover (brighter)
-        return hoveredOpacity + (0.60 - hoveredOpacity) * clickFactor // gently increase to 0.60 on click (darker)
+        const hoveredOpacity = 0.45 - 0.10 * hoverFactor
+        return hoveredOpacity + (0.60 - hoveredOpacity) * clickFactor
       }
       
       if (numCols === 0 || numRows === 0) {
@@ -515,7 +502,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             const p2 = nodes[i+1]?.[j]
             if (!p1 || !p2) continue
             
-            // Check distances of both endpoints to the mouse coordinates
             const dx1 = p1.x - trailMouse.x
             const dy1 = p1.y - trailMouse.y
             const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1)
@@ -526,11 +512,9 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             
             ctx.beginPath()
             
-            // Optimization: If both endpoints are completely outside hover zone, use standard solid rendering
             if (dist1 >= influenceRadius && dist2 >= influenceRadius) {
               ctx.strokeStyle = `rgba(33, 33, 33, ${0.14 * lineOpacity})`
             } else {
-              // Apply dynamically blended gradual linear gradient across endpoint opacities
               const opacity1 = getOpacityAtPoint(dist1) * lineOpacity
               const opacity2 = getOpacityAtPoint(dist2) * lineOpacity
               
@@ -560,7 +544,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             const p2 = nodes[i]?.[j+1]
             if (!p1 || !p2) continue
             
-            // Check distances of both endpoints to the mouse coordinates
             const dx1 = p1.x - trailMouse.x
             const dy1 = p1.y - trailMouse.y
             const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1)
@@ -571,11 +554,9 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             
             ctx.beginPath()
             
-            // Optimization: If both endpoints are completely outside hover zone, use standard solid rendering
             if (dist1 >= influenceRadius && dist2 >= influenceRadius) {
               ctx.strokeStyle = `rgba(33, 33, 33, ${0.14 * lineOpacity})`
             } else {
-              // Apply dynamically blended gradual linear gradient across endpoint opacities
               const opacity1 = getOpacityAtPoint(dist1) * lineOpacity
               const opacity2 = getOpacityAtPoint(dist2) * lineOpacity
               
@@ -786,12 +767,10 @@ export default function ToolsSection() {
       const isMob = w < 768
       const padX = isMob ? 40 : 0
       
-      // Header safety offsets: 110px for mobile nav + spacious safe breathing space, 40px bottom safety margin
       const headerOffset = isMob ? 110 : 0
       const bottomOffset = isMob ? 40 : 0
       const activeHeight = isMob ? (h - headerOffset - bottomOffset) : h
       
-      // Dynamically scale down the square size on short mobile screens using activeHeight to guarantee tiles fit cleanly
       const squareSize = isMob
         ? Math.min(Math.floor((w - padX) / 8), Math.floor(activeHeight / 14))
         : 50
@@ -800,7 +779,6 @@ export default function ToolsSection() {
       const rows = isMob ? 14 : Math.floor(h / squareSize)
       const padLeft = Math.floor((w - (cols * squareSize)) / 2)
       
-      // Pad top starts below the header offset on mobile to ensure top tile never overlaps or touches nav header
       const padTop = isMob
         ? headerOffset + Math.floor((activeHeight - (rows * squareSize)) / 2)
         : Math.floor((h - (rows * squareSize)) / 2)
@@ -827,7 +805,6 @@ export default function ToolsSection() {
   
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] })
   
-  // Track entry scroll progress to fade-in the fixed background statically
   const { scrollYProgress: entryProgress } = useScroll({
     target: containerRef,
     offset: ['start end', 'start start']
@@ -879,7 +856,6 @@ export default function ToolsSection() {
     }
   }, [cardsLaunched])
   
-  // Static-fade background that tracks entry progress and exit scroll progress dynamically
   const bgOpacity = useTransform(
     scrollYProgress,
     [0, 0.1, 0.46, 0.46],
@@ -925,7 +901,6 @@ export default function ToolsSection() {
   return (
     <div ref={containerRef} id="tools" className="relative h-[450vh] w-full">
       <div className="sticky top-0 left-0 h-[100dvh] w-full flex items-center justify-center overflow-hidden z-[4]">
-        {/* Changed back to fixed inset-0 with pointer-events-none to make the background static again without breaking lower-layer interactivity */}
         <motion.div style={{ opacity: bgOpacity }} className="fixed inset-0 z-[2] pointer-events-none">
           <AnimatedBg />
           <div className="absolute inset-0 bg-gradient-to-b from-[#212121]/30 via-transparent to-[#212121]/50 pointer-events-none" />
@@ -944,7 +919,10 @@ export default function ToolsSection() {
           </motion.div>
         </motion.div>
         
-        <div className="absolute inset-0 w-full h-full z-[4] pointer-events-none">
+        <motion.div 
+          style={{ opacity: lightBgOpacity }} 
+          className="absolute inset-0 w-full h-full z-[4] pointer-events-none"
+        >
           <div className="relative w-full h-full">
             {gridData.squareSize > 0 && TOOLS_LIST.map((tool, idx) => {
               const cardPos = layout[idx]
@@ -991,7 +969,7 @@ export default function ToolsSection() {
               )
             })}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   )
