@@ -179,7 +179,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             x: tapX,
             y: tapY,
             radius: 0,
-            maxRadius: Math.max(window.innerWidth, window.innerHeight) * 1.5,
+            maxRadius: Math.max(window.innerWidth, window.innerHeight) * 1.3,
             strength: 1.0
           })
         }
@@ -213,7 +213,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
               x: tapX,
               y: tapY,
               radius: 0,
-              maxRadius: Math.max(window.innerWidth, window.innerHeight) * 1.5,
+              maxRadius: Math.max(window.innerWidth, window.innerHeight) * 1.3,
               strength: 1.0
             })
           } else {
@@ -286,7 +286,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       }
       
       // Update and prune completed dynamic ripples over time
-      const rippleSpeed = 18 // snug speed in pixels per frame
+      const rippleSpeed = 8 // slower ripple propagation to clearly trace wave roll
       for (let rIdx = ripples.length - 1; rIdx >= 0; rIdx--) {
         const ripple = ripples[rIdx]
         ripple.radius += rippleSpeed
@@ -345,12 +345,12 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
                   const dist = Math.sqrt(dx * dx + dy * dy)
                   if (dist > 0) {
                     const diff = dist - ripple.radius
-                    const waveWidth = 140 // physical thickness of wave
+                    const waveWidth = 70 // gentler thin wave width
                     if (Math.abs(diff) < waveWidth) {
                       const progress = diff / waveWidth
                       const envelope = Math.cos(progress * Math.PI / 2)
-                      const waveFactor = Math.sin(progress * Math.PI * 1.5) * envelope
-                      const maxDisplacement = 30
+                      const waveFactor = Math.sin(progress * Math.PI) * envelope
+                      const maxDisplacement = 12 // gentler wave peak
                       const strengthFactor = ripple.strength * (1 - ripple.radius / ripple.maxRadius)
                       const displacement = waveFactor * maxDisplacement * strengthFactor
                       tx += (dx / dist) * displacement
@@ -399,12 +399,12 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
                 const dist = Math.sqrt(dx * dx + dy * dy)
                 if (dist > 0) {
                   const diff = dist - ripple.radius
-                  const waveWidth = 140
+                  const waveWidth = 70
                   if (Math.abs(diff) < waveWidth) {
                     const progress = diff / waveWidth
                     const envelope = Math.cos(progress * Math.PI / 2)
-                    const waveFactor = Math.sin(progress * Math.PI * 1.5) * envelope
-                    const maxDisplacement = 30
+                    const waveFactor = Math.sin(progress * Math.PI) * envelope
+                    const maxDisplacement = 12
                     const strengthFactor = ripple.strength * (1 - ripple.radius / ripple.maxRadius)
                     const displacement = waveFactor * maxDisplacement * strengthFactor
                     tx += (dx / dist) * displacement
