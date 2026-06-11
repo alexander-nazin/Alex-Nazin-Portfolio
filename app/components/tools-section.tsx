@@ -408,6 +408,15 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       const nodesColOffset = gridLines.vertical.filter(x => x < gridLines.padLeft).length
       const nodesRowOffset = gridLines.horizontal.filter(y => y < gridLines.padTop).length
       
+      // Gradually evaluates point-specific opacity based on distance to mouse
+      const getOpacityAtPoint = (dist: number) => {
+        if (dist >= influenceRadius || dist <= 0) return 0.14
+        const force = (influenceRadius - dist) / influenceRadius
+        const hoverFactor = Math.sin(force * Math.PI / 2)
+        const hoveredOpacity = 0.14 - 0.09 * hoverFactor // fades/brightens to 0.05 on hover
+        return hoveredOpacity + (0.35 - hoveredOpacity) * clickFactor // darkens to 0.35 on click
+      }
+      
       if (numCols === 0 || numRows === 0) {
         ctx.restore()
         animId = requestAnimationFrame(draw)
@@ -497,23 +506,31 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             const p2 = nodes[i+1]?.[j]
             if (!p1 || !p2) continue
             
-            const midX = (p1.x + p2.x) / 2
-            const midY = (p1.y + p2.y) / 2
-            const dx = midX - trailMouse.x
-            const dy = midY - trailMouse.y
-            const dist = Math.sqrt(dx * dx + dy * dy)
+            // Check distances of both endpoints to the mouse coordinates
+            const dx1 = p1.x - trailMouse.x
+            const dy1 = p1.y - trailMouse.y
+            const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1)
             
-            // Hardcoded dark palette color (33, 33, 33) to prevent hover/click color changes
-            let r = 33, g = 33, b = 33
-            let localOpacity = 0.14
-            if (dist < influenceRadius && dist > 0) {
-              const force = (influenceRadius - dist) / influenceRadius
-              const hoverFactor = Math.sin(force * Math.PI / 2)
-              const hoveredOpacity = 0.14 - 0.08 * hoverFactor // fades/brightens on hover
-              localOpacity = hoveredOpacity + (0.32 - hoveredOpacity) * clickFactor // darkens on click
-            }
-            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${localOpacity * lineOpacity})`
+            const dx2 = p2.x - trailMouse.x
+            const dy2 = p2.y - trailMouse.y
+            const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2)
+            
             ctx.beginPath()
+            
+            // Optimization: If both endpoints are completely outside hover zone, use standard solid rendering
+            if (dist1 >= influenceRadius && dist2 >= influenceRadius) {
+              ctx.strokeStyle = `rgba(33, 33, 33, ${0.14 * lineOpacity})`
+            } else {
+              // Apply dynamically blended gradual linear gradient across endpoint opacities
+              const opacity1 = getOpacityAtPoint(dist1) * lineOpacity
+              const opacity2 = getOpacityAtPoint(dist2) * lineOpacity
+              
+              const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y)
+              grad.addColorStop(0, `rgba(33, 33, 33, ${opacity1})`)
+              grad.addColorStop(1, `rgba(33, 33, 33, ${opacity2})`)
+              ctx.strokeStyle = grad
+            }
+            
             if (i === 0) {
               ctx.moveTo(0, p1.y)
               ctx.lineTo(p1.x, p1.y)
@@ -534,23 +551,31 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             const p2 = nodes[i]?.[j+1]
             if (!p1 || !p2) continue
             
-            const midX = (p1.x + p2.x) / 2
-            const midY = (p1.y + p2.y) / 2
-            const dx = midX - trailMouse.x
-            const dy = midY - trailMouse.y
-            const dist = Math.sqrt(dx * dx + dy * dy)
+            // Check distances of both endpoints to the mouse coordinates
+            const dx1 = p1.x - trailMouse.x
+            const dy1 = p1.y - trailMouse.y
+            const dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1)
             
-            // Hardcoded dark palette color (33, 33, 33) to prevent hover/click color changes
-            let r = 33, g = 33, b = 33
-            let localOpacity = 0.14
-            if (dist < influenceRadius && dist > 0) {
-              const force = (influenceRadius - dist) / influenceRadius
-              const hoverFactor = Math.sin(force * Math.PI / 2)
-              const hoveredOpacity = 0.14 - 0.08 * hoverFactor // fades/brightens on hover
-              localOpacity = hoveredOpacity + (0.32 - hoveredOpacity) * clickFactor // darkens on click
-            }
-            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${localOpacity * lineOpacity})`
+            const dx2 = p2.x - trailMouse.x
+            const dy2 = p2.y - trailMouse.y
+            const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2)
+            
             ctx.beginPath()
+            
+            // Optimization: If both endpoints are completely outside hover zone, use standard solid rendering
+            if (dist1 >= influenceRadius && dist2 >= influenceRadius) {
+              ctx.strokeStyle = `rgba(33, 33, 33, ${0.14 * lineOpacity})`
+            } else {
+              // Apply dynamically blended gradual linear gradient across endpoint opacities
+              const opacity1 = getOpacityAtPoint(dist1) * lineOpacity
+              const opacity2 = getOpacityAtPoint(dist2) * lineOpacity
+              
+              const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y)
+              grad.addColorStop(0, `rgba(33, 33, 33, ${opacity1})`)
+              grad.addColorStop(1, `rgba(33, 33, 33, ${opacity2})`)
+              ctx.strokeStyle = grad
+            }
+            
             if (j === 0) {
               ctx.moveTo(p1.x, 0)
               ctx.lineTo(p1.x, p1.y)
@@ -573,13 +598,12 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             const dy = node.y - trailMouse.y
             const dist = Math.sqrt(dx * dx + dy * dy)
             
-            // Hardcoded dark palette color (33, 33, 33) to prevent hover/click color changes
             let r = 33, g = 33, b = 33
             let localOpacity = 0.45
             if (dist < influenceRadius && dist > 0) {
               const force = (influenceRadius - dist) / influenceRadius
               const hoverFactor = Math.sin(force * Math.PI / 2)
-              const hoveredOpacity = 0.45 - 0.25 * hoverFactor // fades/brightens on hover
+              const hoveredOpacity = 0.45 - 0.25 * hoverFactor // fades on hover
               localOpacity = hoveredOpacity + (0.85 - hoveredOpacity) * clickFactor // darkens on click
             }
             ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${localOpacity * dotProgress})`
