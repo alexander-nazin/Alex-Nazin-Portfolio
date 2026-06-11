@@ -392,6 +392,10 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       currentInfluence += (targetInfluence - currentInfluence) * 0.2
       targetMultiplier = isMouseDown ? -1.0 : 1.0
       currentMultiplier += (targetMultiplier - currentMultiplier) * 0.2
+      
+      // Evaluates relative click depth factor smoothly (0 for hover, 1 for clicked)
+      const clickFactor = (1 - currentMultiplier) / 2
+      
       const influenceRadius = currentInfluence
       const strength = 1.0
       const isMobileDevice = screenW < 768
@@ -498,15 +502,15 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             const dx = midX - trailMouse.x
             const dy = midY - trailMouse.y
             const dist = Math.sqrt(dx * dx + dy * dy)
+            
+            // Hardcoded dark palette color (33, 33, 33) to prevent hover/click color changes
             let r = 33, g = 33, b = 33
             let localOpacity = 0.14
             if (dist < influenceRadius && dist > 0) {
               const force = (influenceRadius - dist) / influenceRadius
-              const smoothForce = Math.sin(force * Math.PI / 2)
-              r = Math.round(33 + (113 - 33) * smoothForce)
-              g = Math.round(33 + (156 - 33) * smoothForce)
-              b = Math.round(33 + (130 - 33) * smoothForce)
-              localOpacity = 0.14 + (0.7 - 0.14) * smoothForce
+              const hoverFactor = Math.sin(force * Math.PI / 2)
+              const hoveredOpacity = 0.14 - 0.08 * hoverFactor // fades/brightens on hover
+              localOpacity = hoveredOpacity + (0.32 - hoveredOpacity) * clickFactor // darkens on click
             }
             ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${localOpacity * lineOpacity})`
             ctx.beginPath()
@@ -535,15 +539,15 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             const dx = midX - trailMouse.x
             const dy = midY - trailMouse.y
             const dist = Math.sqrt(dx * dx + dy * dy)
+            
+            // Hardcoded dark palette color (33, 33, 33) to prevent hover/click color changes
             let r = 33, g = 33, b = 33
             let localOpacity = 0.14
             if (dist < influenceRadius && dist > 0) {
               const force = (influenceRadius - dist) / influenceRadius
-              const smoothForce = Math.sin(force * Math.PI / 2)
-              r = Math.round(33 + (113 - 33) * smoothForce)
-              g = Math.round(33 + (156 - 33) * smoothForce)
-              b = Math.round(33 + (130 - 33) * smoothForce)
-              localOpacity = 0.14 + (0.7 - 0.14) * smoothForce
+              const hoverFactor = Math.sin(force * Math.PI / 2)
+              const hoveredOpacity = 0.14 - 0.08 * hoverFactor // fades/brightens on hover
+              localOpacity = hoveredOpacity + (0.32 - hoveredOpacity) * clickFactor // darkens on click
             }
             ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${localOpacity * lineOpacity})`
             ctx.beginPath()
@@ -568,15 +572,15 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             const dx = node.x - trailMouse.x
             const dy = node.y - trailMouse.y
             const dist = Math.sqrt(dx * dx + dy * dy)
+            
+            // Hardcoded dark palette color (33, 33, 33) to prevent hover/click color changes
             let r = 33, g = 33, b = 33
             let localOpacity = 0.45
             if (dist < influenceRadius && dist > 0) {
               const force = (influenceRadius - dist) / influenceRadius
-              const smoothForce = Math.sin(force * Math.PI / 2)
-              r = Math.round(33 + (113 - 33) * smoothForce)
-              g = Math.round(33 + (156 - 33) * smoothForce)
-              b = Math.round(33 + (130 - 33) * smoothForce)
-              localOpacity = 0.45 + (0.95 - 0.45) * smoothForce
+              const hoverFactor = Math.sin(force * Math.PI / 2)
+              const hoveredOpacity = 0.45 - 0.25 * hoverFactor // fades/brightens on hover
+              localOpacity = hoveredOpacity + (0.85 - hoveredOpacity) * clickFactor // darkens on click
             }
             ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${localOpacity * dotProgress})`
             ctx.beginPath()
