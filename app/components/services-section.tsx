@@ -202,7 +202,7 @@ function ServiceCard({
   index,
   total,
   progress,
-  inputRange,
+  cardHeights,
   maxHeight,
   onHeightMeasured,
 }: {
@@ -210,7 +210,7 @@ function ServiceCard({
   index: number
   total: number
   progress: any
-  inputRange: number[]
+  cardHeights: Record<number, number>
   maxHeight: number | null
   onHeightMeasured: (idx: number, height: number) => void
 }) {
@@ -239,57 +239,49 @@ function ServiceCard({
 
   // Sticky top coordinates: 60px on desktop; 160px (approx 20%-25%) on mobile to leave reading room
   const stickyTop = isMobile ? '160px' : '60px'
-  const totalSteps = total
 
-  const scaleOutput = inputRange.map((_, idx) => {
-    if (idx <= index) return 1
-    const activeIndex = Math.min(idx, totalSteps - 1)
-    if (activeIndex <= index) return 1
-    const depth = activeIndex - index
-    const factor = isMobile ? 0.05 : 0.065
-    return Math.max(0.7, 1 - (depth * factor))
-  })
+  // Calibrate each card's scale/blur/translate start & end offsets dynamically relative to total scroll track
+  const isMob = typeof window !== 'undefined' && window.innerWidth < 768
+  const margin = isMob ? 40 : 80
+  const stickyTopVal = isMob ? 160 : 60
 
-  const blurOutput = inputRange.map((_, idx) => {
-    if (idx <= index) return 0
-    const activeIndex = Math.min(idx, totalSteps - 1)
-    if (activeIndex <= index) return 0
-    const depth = activeIndex - index
-    const factor = isMobile ? 1.5 : 4
-    return depth * factor
-  })
+  let totalHeight = 0
+  let myStart = 0
 
-  const brightnessOutput = inputRange.map((_, idx) => {
-    if (idx <= index) return 1
-    const activeIndex = Math.min(idx, totalSteps - 1)
-    if (activeIndex <= index) return 1
-    const depth = activeIndex - index
-    const factor = isMobile ? 0.05 : 0.08
-    return Math.max(0.65, 1 - (depth * factor))
-  })
+  for (let j = 0; j < total; j++) {
+    const h = cardHeights[j] || (isMob ? 400 : 500)
+    if (j < index) {
+      myStart += h + margin
+    }
+    totalHeight += h + (j > 0 ? margin : 0)
+  }
 
-  const yOutput = inputRange.map((_, idx) => {
-    if (idx <= index) return '0%'
-    const activeIndex = Math.min(idx, totalSteps - 1)
-    if (activeIndex <= index) return '0%'
-    const depth = activeIndex - index
-    const stepVal = isMobile ? -60 : -72
-    return `${depth * stepVal}%`
-  })
+  const currentHeight = cardHeights[index] || (isMob ? 400 : 500)
+  // Shift exit start exactly to when the next card's top reaches this card's sticky bottom
+  const calStart = Math.max(0, myStart + margin - stickyTopVal)
+  const calEnd = calStart + currentHeight
 
-  const zOutput = inputRange.map((_, idx) => {
-    if (idx <= index) return 0
-    const activeIndex = Math.min(idx, totalSteps - 1)
-    if (activeIndex <= index) return 0
-    const depth = activeIndex - index
-    return depth * -40
-  })
+  const startProgress = totalHeight > 0 ? calStart / totalHeight : 0
+  const endProgress = totalHeight > 0 ? calEnd / totalHeight : 1
 
-  const scale = useTransform(progress, inputRange, scaleOutput, { clamp: true })
-  const blurVal = useTransform(progress, inputRange, blurOutput, { clamp: true })
-  const brightnessVal = useTransform(progress, inputRange, brightnessOutput, { clamp: true })
-  const yTranslate = useTransform(progress, inputRange, yOutput, { clamp: true })
-  const z = useTransform(progress, inputRange, zOutput, { clamp: true })
+  const localInputRange = [0, startProgress, endProgress, 1]
+
+  const scaleOutput = [1, 1, 0.75, 0.75]
+  const blurOutput = [0, 0, 4, 4]
+  const brightnessOutput = [1, 1, 0.65, 0.65]
+  const yOutput = [
+    '0%',
+    '0%',
+    isMobile ? '-60%' : '-72%',
+    isMobile ? '-60%' : '-72%'
+  ]
+  const zOutput = [0, 0, -40, -40]
+
+  const scale = useTransform(progress, localInputRange, scaleOutput, { clamp: true })
+  const blurVal = useTransform(progress, localInputRange, blurOutput, { clamp: true })
+  const brightnessVal = useTransform(progress, localInputRange, brightnessOutput, { clamp: true })
+  const yTranslate = useTransform(progress, localInputRange, yOutput, { clamp: true })
+  const z = useTransform(progress, localInputRange, zOutput, { clamp: true })
   const filterStr = useMotionTemplate`blur(${blurVal}px) brightness(${brightnessVal})`
 
   return (
@@ -422,7 +414,6 @@ export default function ServicesSection() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [cardHeights, setCardHeights] = useState<Record<number, number>>({})
   const [maxHeight, setMaxHeight] = useState<number | null>(null)
-  const [inputRange, setInputRange] = useState<number[]>([0, 0.25, 0.5, 0.75, 1])
 
   const handleHeightMeasured = useCallback((index: number, height: number) => {
     setCardHeights((prev) => {
@@ -441,29 +432,6 @@ export default function ServicesSection() {
       setMaxHeight(max + (isMob ? 28 : 16))
     }
   }, [cardHeights])
-
-  // Dynamically calibrate scroll boundaries based on actual, measured card heights on mobile to sync overlap and transitions perfectly
-  useEffect(() => {
-    const heights = Object.values(cardHeights)
-    if (heights.length === SERVICES.length) {
-      const isMob = typeof window !== 'undefined' && window.innerWidth < 768
-      const margin = isMob ? 40 : 80
-
-      let cumulative = 0
-      const tops: number[] = [0]
-      for (let i = 0; i < SERVICES.length; i++) {
-        const h = isMob ? (cardHeights[i] || 400) : (maxHeight || 500)
-        cumulative += h + (i > 0 ? margin : 0)
-        tops.push(cumulative)
-      }
-
-      const totalHeight = tops[tops.length - 1]
-      if (totalHeight > 0) {
-        const normalized = tops.map(t => t / totalHeight)
-        setInputRange(normalized)
-      }
-    }
-  }, [cardHeights, maxHeight])
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -489,7 +457,7 @@ export default function ServicesSection() {
               index={i}
               total={SERVICES.length}
               progress={scrollYProgress}
-              inputRange={inputRange}
+              cardHeights={cardHeights}
               maxHeight={maxHeight}
               onHeightMeasured={handleHeightMeasured}
             />
