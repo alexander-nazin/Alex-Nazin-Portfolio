@@ -202,6 +202,7 @@ function ServiceCard({
   index,
   total,
   progress,
+  inputRange,
   maxHeight,
   onHeightMeasured,
 }: {
@@ -209,6 +210,7 @@ function ServiceCard({
   index: number
   total: number
   progress: any
+  inputRange: number[]
   maxHeight: number | null
   onHeightMeasured: (idx: number, height: number) => void
 }) {
@@ -243,8 +245,6 @@ function ServiceCard({
   const stickyTop = isMobile ? `${triggerPoint - localHeight}px` : '60px'
 
   const totalSteps = total
-  const step = 1 / totalSteps
-  const inputRange = Array.from({ length: totalSteps + 1 }, (_, i) => i * step)
 
   const scaleOutput = inputRange.map((_, idx) => {
     if (idx <= index) return 1
@@ -278,7 +278,7 @@ function ServiceCard({
     const activeIndex = Math.min(idx, totalSteps - 1)
     if (activeIndex <= index) return '0%'
     const depth = activeIndex - index
-    const stepVal = isMobile ? -60 : -72
+    const stepVal = isMobile ? 0 : -72
     return `${depth * stepVal}%`
   })
 
@@ -427,6 +427,7 @@ export default function ServicesSection() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [cardHeights, setCardHeights] = useState<Record<number, number>>({})
   const [maxHeight, setMaxHeight] = useState<number | null>(null)
+  const [inputRange, setInputRange] = useState<number[]>([0, 0.25, 0.5, 0.75, 1])
 
   const handleHeightMeasured = useCallback((index: number, height: number) => {
     setCardHeights((prev) => {
@@ -445,6 +446,29 @@ export default function ServicesSection() {
       setMaxHeight(max + (isMob ? 28 : 16))
     }
   }, [cardHeights])
+
+  // Dynamically calibrate scroll boundaries based on actual, measured card heights on mobile to sync overlap and transitions perfectly
+  useEffect(() => {
+    const heights = Object.values(cardHeights)
+    if (heights.length === SERVICES.length) {
+      const isMob = typeof window !== 'undefined' && window.innerWidth < 768
+      const margin = isMob ? 40 : 80
+
+      let cumulative = 0
+      const tops: number[] = [0]
+      for (let i = 0; i < SERVICES.length; i++) {
+        const h = isMob ? (cardHeights[i] || 400) : (maxHeight || 500)
+        cumulative += h + (i > 0 ? margin : 0)
+        tops.push(cumulative)
+      }
+
+      const totalHeight = tops[tops.length - 1]
+      if (totalHeight > 0) {
+        const normalized = tops.map(t => t / totalHeight)
+        setInputRange(normalized)
+      }
+    }
+  }, [cardHeights, maxHeight])
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -470,6 +494,7 @@ export default function ServicesSection() {
               index={i}
               total={SERVICES.length}
               progress={scrollYProgress}
+              inputRange={inputRange}
               maxHeight={maxHeight}
               onHeightMeasured={handleHeightMeasured}
             />
