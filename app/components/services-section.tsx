@@ -304,25 +304,27 @@ function ServiceCard({
   const scale = useTransform(
     activeProgress,
     isMobile ? [0, 1] : inputRange,
-    isMobile ? [1, 0.95] : scaleOutput,
+    isMobile ? [1, 0.94] : scaleOutput,
     { clamp: true }
   )
   const blurVal = useTransform(
     activeProgress,
     isMobile ? [0, 1] : inputRange,
-    isMobile ? [0, 1.5] : blurOutput,
+    isMobile ? [0, 2] : blurOutput,
     { clamp: true }
   )
   const brightnessVal = useTransform(
     activeProgress,
     isMobile ? [0, 1] : inputRange,
-    isMobile ? [1, 0.95] : brightnessOutput,
+    isMobile ? [1, 0.92] : brightnessOutput,
     { clamp: true }
   )
+  // On mobile, translating the card downwards (positive 'y') relative to the natural page scroll
+  // slows down its upward movement relative to the viewport, letting the upcoming card smoothly overlap it.
   const yTranslate = useTransform(
     activeProgress,
     isMobile ? [0, 1] : inputRange,
-    isMobile ? ['0%', '-15%'] : yOutput,
+    isMobile ? ['0%', '25%'] : yOutput,
     { clamp: true }
   )
   const z = useTransform(
