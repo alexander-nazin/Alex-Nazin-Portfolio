@@ -237,134 +237,106 @@ function ServiceCard({
     return () => window.removeEventListener('resize', measure)
   }, [index, onHeightMeasured])
 
-  // Sticky top coordinates: 60px on desktop; 20px on mobile
-  const stickyTop = isMobile ? '20px' : '60px'
+  // Sticky top coordinates: 60px on desktop
+  const stickyTop = isMobile ? 'auto' : '60px'
   const totalSteps = total
   const step = 1 / totalSteps
 
-  // Custom progress tracking arrays
-  let customRange: number[] = [0]
-  let depths: number[] = [0]
-
-  if (isMobile) {
-    const heights = Array.from({ length: total }, (_, i) => cardHeights[i] || 400)
-    const margin = 40 // mobile marginTop is 40px
-
-    // Calculate cumulative offsets
-    const offsets: number[] = [0]
-    for (let i = 0; i < total; i++) {
-      offsets.push(offsets[i] + heights[i] + margin)
-    }
-    const H_total = offsets[total]
-
-    customRange = [0]
-    depths = [0]
-
-    const p_sticky = offsets[index] / H_total
-    if (p_sticky > 0) {
-      customRange.push(p_sticky)
-      depths.push(0)
-    }
-
-    // Lock exit triggers to when the rising card's top reaches the first card's bottom edge (X point)
-    for (let j = index; j < total - 1; j++) {
-      const S_end_prev = j > 0 ? offsets[j] : 0
-      const S_start = Math.max(S_end_prev, offsets[j + 1] - heights[0])
-      const S_end = offsets[j + 1]
-
-      const p_start = S_start / H_total
-      const p_end = S_end / H_total
-      const currentDepth = j - index
-
-      if (p_start > customRange[customRange.length - 1]) {
-        customRange.push(p_start)
-        depths.push(currentDepth)
-      }
-
-      if (p_end > customRange[customRange.length - 1]) {
-        customRange.push(p_end)
-        depths.push(currentDepth + 1)
-      }
-    }
-
-    if (customRange[customRange.length - 1] < 1.0) {
-      customRange.push(1.0)
-      depths.push(depths[depths.length - 1])
-    }
-  }
-
-  // Bind parameters conditionally
-  const inputRange = isMobile
-    ? customRange
-    : Array.from({ length: totalSteps + 1 }, (_, i) => i * step)
-
-  const scaleOutput = isMobile
-    ? depths.map(d => Math.max(0.7, 1 - d * 0.05))
-    : inputRange.map((_, idx) => {
-        if (idx <= index) return 1
-        const activeIndex = Math.min(idx, totalSteps - 1)
-        if (activeIndex <= index) return 1
-        const depth = activeIndex - index
-        const factor = 0.065
-        return Math.max(0.7, 1 - (depth * factor))
-      })
-
-  const blurOutput = isMobile
-    ? depths.map(d => d * 1.5)
-    : inputRange.map((_, idx) => {
-        if (idx <= index) return 0
-        const activeIndex = Math.min(idx, totalSteps - 1)
-        if (activeIndex <= index) return 0
-        const depth = activeIndex - index
-        const factor = 4
-        return depth * factor
-      })
-
-  const brightnessOutput = isMobile
-    ? depths.map(d => Math.max(0.65, 1 - d * 0.05))
-    : inputRange.map((_, idx) => {
-        if (idx <= index) return 1
-        const activeIndex = Math.min(idx, totalSteps - 1)
-        if (activeIndex <= index) return 1
-        const depth = activeIndex - index
-        const factor = 0.08
-        return Math.max(0.65, 1 - (depth * factor))
-      })
-
-  const yOutput = isMobile
-    ? depths.map(d => `${d * -60}%`)
-    : inputRange.map((_, idx) => {
-        if (idx <= index) return '0%'
-        const activeIndex = Math.min(idx, totalSteps - 1)
-        if (activeIndex <= index) return '0%'
-        const depth = activeIndex - index
-        const stepVal = -72
-        return `${depth * stepVal}%`
-      })
-
-  const zOutput = isMobile
-    ? depths.map(d => d * -40)
-    : inputRange.map((_, idx) => {
-        if (idx <= index) return 0
-        const activeIndex = Math.min(idx, totalSteps - 1)
-        if (activeIndex <= index) return 0
-        const depth = activeIndex - index
-        return depth * -40
-      })
-
-  const scale = useTransform(progress, inputRange, scaleOutput, { clamp: true })
-  const blurVal = useTransform(progress, inputRange, blurOutput, { clamp: true })
-  const brightnessVal = useTransform(progress, inputRange, brightnessOutput, {
-    clamp: true,
+  // Create a local viewport-locked scroll hook targeting this card specifically on mobile.
+  // The animation starts when the card's bottom (end) reaches 35% of viewport height (the X point)
+  // and finishes when the bottom of the card leaves the viewport (0.0).
+  const localScroll = useScroll({
+    target: cardRef,
+    offset: ['end 0.35', 'end 0.0'],
   })
-  const yTranslate = useTransform(progress, inputRange, yOutput, { clamp: true })
-  const z = useTransform(progress, inputRange, zOutput, { clamp: true })
+
+  // Use local card progress on mobile; parent progress on desktop
+  const activeProgress = isMobile ? localScroll.scrollYProgress : progress
+
+  // Generate original desktop progress arrays
+  const inputRange = Array.from({ length: totalSteps + 1 }, (_, i) => i * step)
+
+  const scaleOutput = inputRange.map((_, idx) => {
+    if (idx <= index) return 1
+    const activeIndex = Math.min(idx, totalSteps - 1)
+    if (activeIndex <= index) return 1
+    const depth = activeIndex - index
+    const factor = 0.065
+    return Math.max(0.7, 1 - (depth * factor))
+  })
+
+  const blurOutput = inputRange.map((_, idx) => {
+    if (idx <= index) return 0
+    const activeIndex = Math.min(idx, totalSteps - 1)
+    if (activeIndex <= index) return 0
+    const depth = activeIndex - index
+    const factor = 4
+    return depth * factor
+  })
+
+  const brightnessOutput = inputRange.map((_, idx) => {
+    if (idx <= index) return 1
+    const activeIndex = Math.min(idx, totalSteps - 1)
+    if (activeIndex <= index) return 1
+    const depth = activeIndex - index
+    const factor = 0.08
+    return Math.max(0.65, 1 - (depth * factor))
+  })
+
+  const yOutput = inputRange.map((_, idx) => {
+    if (idx <= index) return '0%'
+    const activeIndex = Math.min(idx, totalSteps - 1)
+    if (activeIndex <= index) return '0%'
+    const depth = activeIndex - index
+    const stepVal = -72
+    return `${depth * stepVal}%`
+  })
+
+  const zOutput = inputRange.map((_, idx) => {
+    if (idx <= index) return 0
+    const activeIndex = Math.min(idx, totalSteps - 1)
+    if (activeIndex <= index) return 0
+    const depth = activeIndex - index
+    return depth * -40
+  })
+
+  // Set transforms based on active progress
+  const scale = useTransform(
+    activeProgress,
+    isMobile ? [0, 1] : inputRange,
+    isMobile ? [1, 0.95] : scaleOutput,
+    { clamp: true }
+  )
+  const blurVal = useTransform(
+    activeProgress,
+    isMobile ? [0, 1] : inputRange,
+    isMobile ? [0, 1.5] : blurOutput,
+    { clamp: true }
+  )
+  const brightnessVal = useTransform(
+    activeProgress,
+    isMobile ? [0, 1] : inputRange,
+    isMobile ? [1, 0.95] : brightnessOutput,
+    { clamp: true }
+  )
+  const yTranslate = useTransform(
+    activeProgress,
+    isMobile ? [0, 1] : inputRange,
+    isMobile ? ['0%', '-15%'] : yOutput,
+    { clamp: true }
+  )
+  const z = useTransform(
+    activeProgress,
+    isMobile ? [0, 1] : inputRange,
+    isMobile ? [0, -40] : zOutput,
+    { clamp: true }
+  )
   const filterStr = useMotionTemplate`blur(${blurVal}px) brightness(${brightnessVal})`
 
   return (
     <div
       style={{
-        position: 'sticky',
+        position: isMobile ? 'relative' : 'sticky',
         top: stickyTop,
         zIndex: index + 1,
         marginTop: index > 0 ? (isMobile ? '40px' : '80px') : '0px',
