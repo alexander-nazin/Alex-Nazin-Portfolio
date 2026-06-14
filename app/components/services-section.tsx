@@ -242,7 +242,7 @@ function ServiceCard({
   const totalSteps = total
   const step = 1 / totalSteps
 
-  // Mobile custom timeline variables
+  // Custom progress tracking arrays
   let customRange: number[] = [0]
   let depths: number[] = [0]
 
@@ -257,23 +257,19 @@ function ServiceCard({
     }
     const H_total = offsets[total]
 
-    const p_sticky = offsets[index] / H_total
-    if (p_sticky > 0) {
-      customRange.push(p_sticky)
-      depths.push(0)
-    }
+    // Initialize custom range based on each card's direct arrival at the viewport's X point
+    customRange = []
+    depths = []
 
-    // Build transition checkpoints for mobile overlap
-    for (let j = index; j < total - 1; j++) {
-      const p_trans_start = (offsets[j] + margin) / H_total
-      const p_trans_end = offsets[j + 1] / H_total
-      const currentDepth = j - index
-
-      customRange.push(p_trans_start)
-      depths.push(currentDepth)
-
-      customRange.push(p_trans_end)
-      depths.push(currentDepth + 1)
+    for (let j = 0; j < total; j++) {
+      customRange.push(offsets[j] / H_total)
+      if (j <= index) {
+        // The card is fully flat (depth 0) until it is sticky and the next card begins to cover it
+        depths.push(0)
+      } else {
+        // Incremental depth steps occur linearly as subsequent cards stack
+        depths.push(j - index)
+      }
     }
 
     if (customRange[customRange.length - 1] < 1.0) {
@@ -282,7 +278,7 @@ function ServiceCard({
     }
   }
 
-  // Bind timelines conditionally
+  // Bind parameters conditionally
   const inputRange = isMobile
     ? customRange
     : Array.from({ length: totalSteps + 1 }, (_, i) => i * step)
