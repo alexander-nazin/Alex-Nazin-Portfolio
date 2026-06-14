@@ -148,7 +148,7 @@ const SERVICES: Service[] = [
     num: '04',
     title: 'Custom Learning Tools & Game Generators',
     description:
-      "High-level design for building your own internal learning tools. I map out how the whole system works, from the learner's experience to the manager's control panel:",
+      "High‐level design for building your own internal learning tools. I map out how the whole system works, from the learner's experience to the manager's control panel:",
     items: [
       {
         title: "The Learner's Side",
@@ -176,11 +176,11 @@ const SERVICES: Service[] = [
 ]
 
 function CardGrid({ color }: { color: string }) {
-  const id = `grid-${color.replace(/[^a-z0-9]/gi, '')}`
+  const id = `grid‐${color.replace(/[^a‐z0‐9]/gi, '')}`
   return (
     <svg
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      aria-hidden
+      className="absolute inset‐0 w‐full h‐full pointer‐events‐none"
+      aria‐hidden
     >
       <defs>
         <pattern id={id} width={48} height={48} patternUnits="userSpaceOnUse">
@@ -237,58 +237,108 @@ function ServiceCard({
 
   // Sticky top coordinates: 60px on desktop; 20px on mobile
   const stickyTop = isMobile ? '20px' : '60px'
-
   const totalSteps = total
   const step = 1 / totalSteps
-  const inputRange = Array.from({ length: totalSteps + 1 }, (_, i) => i * step)
 
-  const scaleOutput = inputRange.map((_, idx) => {
-    if (idx <= index) return 1
-    const activeIndex = Math.min(idx, totalSteps - 1)
-    if (activeIndex <= index) return 1
-    const depth = activeIndex - index
-    const factor = isMobile ? 0.05 : 0.065
-    return Math.max(0.7, 1 - (depth * factor))
+  // Create input progress checkpoints.
+  // On mobile, each scroll step of size 'step' is split into:
+  // - Holding phase (first 60% of step)
+  // - Transitioning phase (remaining 40% of step)
+  const inputRange = isMobile
+    ? (() => {
+        const range: number[] = []
+        for (let i = 0; i < totalSteps; i++) {
+          range.push(i * step)
+          range.push(i * step + step * 0.6)
+        }
+        range.push(1.0)
+        return range
+      })()
+    : Array.from({ length: totalSteps + 1 }, (_, i) => i * step)
+
+  const scaleOutput = inputRange.map((_, k) => {
+    if (isMobile) {
+      const rawDepth = k <= 2 * index ? 0 : Math.floor((k - 2 * index) / 2)
+      const depth = Math.min(rawDepth, totalSteps - 1 - index)
+      const factor = 0.05
+      return Math.max(0.7, 1 - (depth * factor))
+    } else {
+      if (k <= index) return 1
+      const activeIndex = Math.min(k, totalSteps - 1)
+      if (activeIndex <= index) return 1
+      const depth = activeIndex - index
+      const factor = 0.065
+      return Math.max(0.7, 1 - (depth * factor))
+    }
   })
 
-  const blurOutput = inputRange.map((_, idx) => {
-    if (idx <= index) return 0
-    const activeIndex = Math.min(idx, totalSteps - 1)
-    if (activeIndex <= index) return 0
-    const depth = activeIndex - index
-    const factor = isMobile ? 1.5 : 4
-    return depth * factor
+  const blurOutput = inputRange.map((_, k) => {
+    if (isMobile) {
+      const rawDepth = k <= 2 * index ? 0 : Math.floor((k - 2 * index) / 2)
+      const depth = Math.min(rawDepth, totalSteps - 1 - index)
+      const factor = 1.5
+      return depth * factor
+    } else {
+      if (k <= index) return 0
+      const activeIndex = Math.min(k, totalSteps - 1)
+      if (activeIndex <= index) return 0
+      const depth = activeIndex - index
+      const factor = 4
+      return depth * factor
+    }
   })
 
-  const brightnessOutput = inputRange.map((_, idx) => {
-    if (idx <= index) return 1
-    const activeIndex = Math.min(idx, totalSteps - 1)
-    if (activeIndex <= index) return 1
-    const depth = activeIndex - index
-    const factor = isMobile ? 0.05 : 0.08
-    return Math.max(0.65, 1 - (depth * factor))
+  const brightnessOutput = inputRange.map((_, k) => {
+    if (isMobile) {
+      const rawDepth = k <= 2 * index ? 0 : Math.floor((k - 2 * index) / 2)
+      const depth = Math.min(rawDepth, totalSteps - 1 - index)
+      const factor = 0.05
+      return Math.max(0.65, 1 - (depth * factor))
+    } else {
+      if (k <= index) return 1
+      const activeIndex = Math.min(k, totalSteps - 1)
+      if (activeIndex <= index) return 1
+      const depth = activeIndex - index
+      const factor = 0.08
+      return Math.max(0.65, 1 - (depth * factor))
+    }
   })
 
-  const yOutput = inputRange.map((_, idx) => {
-    if (idx <= index) return '0%'
-    const activeIndex = Math.min(idx, totalSteps - 1)
-    if (activeIndex <= index) return '0%'
-    const depth = activeIndex - index
-    const stepVal = isMobile ? -60 : -72
-    return `${depth * stepVal}%`
+  const yOutput = inputRange.map((_, k) => {
+    if (isMobile) {
+      const rawDepth = k <= 2 * index ? 0 : Math.floor((k - 2 * index) / 2)
+      const depth = Math.min(rawDepth, totalSteps - 1 - index)
+      const stepVal = -60
+      return `${depth * stepVal}%`
+    } else {
+      if (k <= index) return '0%'
+      const activeIndex = Math.min(k, totalSteps - 1)
+      if (activeIndex <= index) return '0%'
+      const depth = activeIndex - index
+      const stepVal = -72
+      return `${depth * stepVal}%`
+    }
   })
 
-  const zOutput = inputRange.map((_, idx) => {
-    if (idx <= index) return 0
-    const activeIndex = Math.min(idx, totalSteps - 1)
-    if (activeIndex <= index) return 0
-    const depth = activeIndex - index
-    return depth * -40
+  const zOutput = inputRange.map((_, k) => {
+    if (isMobile) {
+      const rawDepth = k <= 2 * index ? 0 : Math.floor((k - 2 * index) / 2)
+      const depth = Math.min(rawDepth, totalSteps - 1 - index)
+      return depth * -40
+    } else {
+      if (k <= index) return 0
+      const activeIndex = Math.min(k, totalSteps - 1)
+      if (activeIndex <= index) return 0
+      const depth = activeIndex - index
+      return depth * -40
+    }
   })
 
   const scale = useTransform(progress, inputRange, scaleOutput, { clamp: true })
   const blurVal = useTransform(progress, inputRange, blurOutput, { clamp: true })
-  const brightnessVal = useTransform(progress, inputRange, brightnessOutput, { clamp: true })
+  const brightnessVal = useTransform(progress, inputRange, brightnessOutput, {
+    clamp: true,
+  })
   const yTranslate = useTransform(progress, inputRange, yOutput, { clamp: true })
   const z = useTransform(progress, inputRange, zOutput, { clamp: true })
   const filterStr = useMotionTemplate`blur(${blurVal}px) brightness(${brightnessVal})`
@@ -301,7 +351,7 @@ function ServiceCard({
         zIndex: index + 1,
         marginTop: index > 0 ? (isMobile ? '40px' : '80px') : '0px',
       }}
-      className="w-full"
+      className="w‐full"
     >
       <motion.div
         style={{
@@ -310,27 +360,26 @@ function ServiceCard({
           z,
           y: yTranslate,
           transformPerspective: '1200px',
-          transformStyle: 'preserve-3d',
+          transformStyle: 'preserve‐3d',
           transformOrigin: 'center center',
         }}
-        className="relative overflow-visible rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.2)]"
+        className="relative overflow‐visible rounded‐2xl shadow‐[0_12px_40px_‐12px_rgba(0,0,0,0.2)]"
       >
-        {/* Height scales dynamically based on measured max height for both desktop and mobile layouts */}
         <div
           ref={cardRef}
-          className="w-full flex flex-col relative overflow-hidden transition-all duration-300"
-          style={{ 
+          className="w‐full flex flex‐col relative overflow‐hidden transition‐all duration‐300"
+          style={{
             backgroundColor: service.bg,
-            height: maxHeight ? `${maxHeight}px` : 'auto'
+            height: isMobile ? 'auto' : (maxHeight ? `${maxHeight}px` : 'auto'),
           }}
         >
           {/* Grid background */}
           <CardGrid color={service.gridColor} />
 
-          {/* Number: desktop watermark background position. right-X matches content left-X exactly */}
-          <div className="hidden md:flex absolute right-8 md:right-12 lg:right-16 xl:right-20 2xl:right-24 top-1/2 -translate-y-1/2 select-none pointer-events-none z-[0]">
+          {/* Number: desktop watermark background position. right‐X matches content left‐X exactly */}
+          <div className="hidden md:flex absolute right‐8 md:right‐12 lg:right‐16 xl:right‐20 2xl:right‐24 top‐1/2 ‐translate‐y‐1/2 select‐none pointer‐events‐none z‐[0]">
             <span
-              className="font-heading font-bold leading-none block"
+              className="font‐heading font‐bold leading‐none block"
               style={{
                 color: service.numColor,
                 fontSize: 'clamp(180px, 26vw, 360px)',
@@ -340,20 +389,20 @@ function ServiceCard({
             </span>
           </div>
 
-          {/* Content Wrapper: left/right padding is balanced to equal watermark spacing. Content is aligned to top (justify-start) */}
-          <div 
+          {/* Content Wrapper: left/right padding is balanced to equal watermark spacing. Content is aligned to top (justify‐start) */}
+          <div
             ref={innerRef}
-            className={`relative z-[1] w-full flex flex-col justify-start overflow-visible ${
-              isMobile 
-                ? 'pt-6 pb-6 px-6' 
-                : 'pt-8 pb-8 pl-8 pr-8 md:pt-10 md:pb-10 md:pl-12 md:pr-12 lg:pt-12 lg:pb-12 lg:pl-16 lg:pr-16 xl:pt-14 xl:pb-14 xl:pl-20 xl:pr-20 2xl:pl-24 2xl:pr-24'
+            className={`relative z‐[1] w‐full flex flex‐col justify‐start overflow‐visible ${
+              isMobile
+                ? 'pt‐6 pb‐6 px‐6'
+                : 'pt‐8 pb‐8 pl‐8 pr‐8 md:pt‐10 md:pb‐10 md:pl‐12 md:pr‐12 lg:pt‐12 lg:pb‐12 lg:pl‐16 lg:pr‐16 xl:pt‐14 xl:pb‐14 xl:pl‐20 xl:pr‐20 2xl:pl‐24 2xl:pr‐24'
             }`}
           >
             {/* Mobile watermark placed natively in document flow inside innerRef, so its height is measured and never cut off */}
             {isMobile && (
-              <div className="md:hidden select-none pointer-events-none z-[1] mb-4 w-full text-right">
+              <div className="md:hidden select‐none pointer‐events‐none z‐[1] mb‐4 w‐full text‐right">
                 <span
-                  className="font-heading font-bold leading-none block text-right text-[16vw]"
+                  className="font‐heading font‐bold leading‐none block text‐right text‐[16vw]"
                   style={{ color: service.numColor }}
                 >
                   {service.num}
@@ -361,30 +410,35 @@ function ServiceCard({
               </div>
             )}
 
-            {/* max-w-[12ch] forces long titles to break elegantly into exactly two lines on widescreen, while "PRODUCTION" stays on one line */}
+            {/* max‐w‐[12ch] forces long titles to break elegantly into exactly two lines on widescreen, while "PRODUCTION" stays on one line */}
             <h3
-              className="font-heading text-[clamp(1.8rem,4vw,3.5rem)] font-bold tracking-tight leading-[0.95] uppercase mb-6 md:mb-8 max-w-[12ch] sm:max-w-[15ch] lg:max-w-[18ch] xl:max-w-[22ch]"
+              className="font‐heading text‐[clamp(1.8rem,4vw,3.5rem)] font‐bold tracking‐tight leading‐[0.95] uppercase mb‐6 md:mb‐8 max‐w‐[12ch] sm:max‐w‐[15ch] lg:max‐w‐[18ch] xl:max‐w‐[22ch]"
               style={{ color: service.textColor }}
             >
               {service.title}
             </h3>
-            <div className="max-w-xl overflow-visible" style={{ color: service.textColor }}>
+
+            <div
+              className="max‐w‐xl overflow‐visible"
+              style={{ color: service.textColor }}
+            >
               {service.description && (
                 <p
-                  className="text-[14px] md:text-[15px] leading-[1.7] mb-6 md:mb-8"
+                  className="text‐[14px] md:text‐[15px] leading‐[1.7] mb‐6 md:mb‐8"
                   style={{ color: service.descColor }}
                 >
                   {service.description}
                 </p>
               )}
+
               {service.items.length > 0 && (
-                <div className="space-y-4">
+                <div className="space‐y‐4">
                   {service.items.map((item, j) => {
                     const Icon = ICON_MAP[item.iconLabel]
                     return (
-                      <div key={j} className="flex gap-4 items-start">
+                      <div key={j} className="flex gap‐4 items‐start">
                         <div
-                          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                          className="w‐9 h‐9 rounded‐lg flex items‐center justify‐center shrink‐0 mt‐0.5"
                           style={{ backgroundColor: service.iconBg }}
                         >
                           {Icon && (
@@ -397,13 +451,13 @@ function ServiceCard({
                         </div>
                         <div>
                           <span
-                            className="font-heading text-[15px] md:text-[17px] font-semibold block mb-1"
+                            className="font‐heading text‐[15px] md:text‐[17px] font‐semibold block mb‐1"
                             style={{ color: service.itemTitleColor }}
                           >
                             {item.title}
                           </span>
                           <span
-                            className="text-[13px] md:text-[14px] leading-[1.7] block"
+                            className="text‐[13px] md:text‐[14px] leading‐[1.7] block"
                             style={{ color: service.itemDescColor }}
                           >
                             {item.description}
@@ -451,18 +505,18 @@ export default function ServicesSection() {
   })
 
   return (
-    <div id="services" className="relative bg-[#212121]">
+    <div id="services" className="relative bg‐[#212121]">
       {/* Outer container aligned to widescreen limits */}
-      <div className="w-full px-8 md:px-12 lg:px-16 xl:px-20 pt-32 pb-16 md:pt-44 md:pb-20">
+      <div className="w‐full px‐8 md:px‐12 lg:px‐16 xl:px‐20 pt‐32 pb‐16 md:pt‐44 md:pb‐20">
         {/* Static Header Title */}
-        <div className="pb-16 relative z-[0]">
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight">
-            What I <span className="font-serif italic font-normal text-[#729E84]">bring</span> to the table
+        <div className="pb‐16 relative z‐[0]">
+          <h2 className="font‐heading text‐3xl sm:text‐4xl md:text‐5xl font‐bold tracking‐tight text‐white leading‐tight">
+            What I <span className="font‐serif italic font‐normal text‐[#729E84]">bring</span> to the table
           </h2>
         </div>
 
         {/* Dynamic vertical stack */}
-        <div ref={containerRef} className="relative pb-4">
+        <div ref={containerRef} className="relative pb‐4">
           {SERVICES.map((service, i) => (
             <ServiceCard
               key={service.num}
