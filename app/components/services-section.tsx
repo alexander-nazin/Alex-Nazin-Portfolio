@@ -202,7 +202,6 @@ function ServiceCard({
   index,
   total,
   progress,
-  cardHeights,
   maxHeight,
   onHeightMeasured,
 }: {
@@ -210,7 +209,6 @@ function ServiceCard({
   index: number
   total: number
   progress: any
-  cardHeights: Record<number, number>
   maxHeight: number | null
   onHeightMeasured: (idx: number, height: number) => void
 }) {
@@ -237,51 +235,62 @@ function ServiceCard({
     return () => window.removeEventListener('resize', measure)
   }, [index, onHeightMeasured])
 
-  // Sticky top coordinates: 60px on desktop; 160px (approx 20%-25%) on mobile to leave reading room
-  const stickyTop = isMobile ? '160px' : '60px'
+  // Sticky top coordinates: 60px on desktop; 30vh (30% of viewport) on mobile to leave reading room
+  const stickyTop = isMobile ? '30vh' : '60px'
 
-  // Calibrate each card's scale/blur/translate start & end offsets dynamically relative to total scroll track
-  const isMob = typeof window !== 'undefined' && window.innerWidth < 768
-  const margin = isMob ? 40 : 80
-  const stickyTopVal = isMob ? 160 : 60
+  const totalSteps = total
+  const step = 1 / totalSteps
+  const inputRange = Array.from({ length: totalSteps + 1 }, (_, i) => i * step)
 
-  let totalHeight = 0
-  let myStart = 0
+  const scaleOutput = inputRange.map((_, idx) => {
+    if (idx <= index) return 1
+    const activeIndex = Math.min(idx, totalSteps - 1)
+    if (activeIndex <= index) return 1
+    const depth = activeIndex - index
+    const factor = isMobile ? 0.05 : 0.065
+    return Math.max(0.7, 1 - (depth * factor))
+  })
 
-  for (let j = 0; j < total; j++) {
-    const h = cardHeights[j] || (isMob ? 400 : 500)
-    if (j < index) {
-      myStart += h + margin
-    }
-    totalHeight += h + (j > 0 ? margin : 0)
-  }
+  const blurOutput = inputRange.map((_, idx) => {
+    if (idx <= index) return 0
+    const activeIndex = Math.min(idx, totalSteps - 1)
+    if (activeIndex <= index) return 0
+    const depth = activeIndex - index
+    const factor = isMobile ? 1.5 : 4
+    return depth * factor
+  })
 
-  const currentHeight = cardHeights[index] || (isMob ? 400 : 500)
-  // Shift exit start exactly to when the next card's top reaches this card's sticky bottom
-  const calStart = Math.max(0, myStart + margin - stickyTopVal)
-  const calEnd = calStart + currentHeight
+  const brightnessOutput = inputRange.map((_, idx) => {
+    if (idx <= index) return 1
+    const activeIndex = Math.min(idx, totalSteps - 1)
+    if (activeIndex <= index) return 1
+    const depth = activeIndex - index
+    const factor = isMobile ? 0.05 : 0.08
+    return Math.max(0.65, 1 - (depth * factor))
+  })
 
-  const startProgress = totalHeight > 0 ? calStart / totalHeight : 0
-  const endProgress = totalHeight > 0 ? calEnd / totalHeight : 1
+  const yOutput = inputRange.map((_, idx) => {
+    if (idx <= index) return '0%'
+    const activeIndex = Math.min(idx, totalSteps - 1)
+    if (activeIndex <= index) return '0%'
+    const depth = activeIndex - index
+    const stepVal = isMobile ? -60 : -72
+    return `${depth * stepVal}%`
+  })
 
-  const localInputRange = [0, startProgress, endProgress, 1]
+  const zOutput = inputRange.map((_, idx) => {
+    if (idx <= index) return 0
+    const activeIndex = Math.min(idx, totalSteps - 1)
+    if (activeIndex <= index) return 0
+    const depth = activeIndex - index
+    return depth * -40
+  })
 
-  const scaleOutput = [1, 1, 0.75, 0.75]
-  const blurOutput = [0, 0, 4, 4]
-  const brightnessOutput = [1, 1, 0.65, 0.65]
-  const yOutput = [
-    '0%',
-    '0%',
-    isMobile ? '-60%' : '-72%',
-    isMobile ? '-60%' : '-72%'
-  ]
-  const zOutput = [0, 0, -40, -40]
-
-  const scale = useTransform(progress, localInputRange, scaleOutput, { clamp: true })
-  const blurVal = useTransform(progress, localInputRange, blurOutput, { clamp: true })
-  const brightnessVal = useTransform(progress, localInputRange, brightnessOutput, { clamp: true })
-  const yTranslate = useTransform(progress, localInputRange, yOutput, { clamp: true })
-  const z = useTransform(progress, localInputRange, zOutput, { clamp: true })
+  const scale = useTransform(progress, inputRange, scaleOutput, { clamp: true })
+  const blurVal = useTransform(progress, inputRange, blurOutput, { clamp: true })
+  const brightnessVal = useTransform(progress, inputRange, brightnessOutput, { clamp: true })
+  const yTranslate = useTransform(progress, inputRange, yOutput, { clamp: true })
+  const z = useTransform(progress, inputRange, zOutput, { clamp: true })
   const filterStr = useMotionTemplate`blur(${blurVal}px) brightness(${brightnessVal})`
 
   return (
@@ -457,7 +466,6 @@ export default function ServicesSection() {
               index={i}
               total={SERVICES.length}
               progress={scrollYProgress}
-              cardHeights={cardHeights}
               maxHeight={maxHeight}
               onHeightMeasured={handleHeightMeasured}
             />
