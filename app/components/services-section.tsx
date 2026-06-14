@@ -257,18 +257,33 @@ function ServiceCard({
     }
     const H_total = offsets[total]
 
-    // Initialize custom range based on each card's direct arrival at the viewport's X point
-    customRange = []
-    depths = []
+    customRange = [0]
+    depths = [0]
 
-    for (let j = 0; j < total; j++) {
-      customRange.push(offsets[j] / H_total)
-      if (j <= index) {
-        // The card is fully flat (depth 0) until it is sticky and the next card begins to cover it
-        depths.push(0)
-      } else {
-        // Incremental depth steps occur linearly as subsequent cards stack
-        depths.push(j - index)
+    const p_sticky = offsets[index] / H_total
+    if (p_sticky > 0) {
+      customRange.push(p_sticky)
+      depths.push(0)
+    }
+
+    // Lock exit triggers to when the rising card's top reaches the first card's bottom edge (X point)
+    for (let j = index; j < total - 1; j++) {
+      const S_end_prev = j > 0 ? offsets[j] : 0
+      const S_start = Math.max(S_end_prev, offsets[j + 1] - heights[0])
+      const S_end = offsets[j + 1]
+
+      const p_start = S_start / H_total
+      const p_end = S_end / H_total
+      const currentDepth = j - index
+
+      if (p_start > customRange[customRange.length - 1]) {
+        customRange.push(p_start)
+        depths.push(currentDepth)
+      }
+
+      if (p_end > customRange[customRange.length - 1]) {
+        customRange.push(p_end)
+        depths.push(currentDepth + 1)
       }
     }
 
