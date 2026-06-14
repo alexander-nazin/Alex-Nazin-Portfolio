@@ -204,6 +204,7 @@ function ServiceCard({
   progress,
   maxHeight,
   onHeightMeasured,
+  cardHeights,
 }: {
   service: Service
   index: number
@@ -211,6 +212,7 @@ function ServiceCard({
   progress: any
   maxHeight: number | null
   onHeightMeasured: (idx: number, height: number) => void
+  cardHeights: Record<number, number>
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
@@ -240,99 +242,104 @@ function ServiceCard({
   const totalSteps = total
   const step = 1 / totalSteps
 
-  // Create input progress checkpoints.
-  // On mobile, each scroll step of size 'step' is split into:
-  // - Holding phase (first 60% of step)
-  // - Transitioning phase (remaining 40% of step)
+  // Mobile custom timeline variables
+  let customRange: number[] = [0]
+  let depths: number[] = [0]
+
+  if (isMobile) {
+    const heights = Array.from({ length: total }, (_, i) => cardHeights[i] || 400)
+    const margin = 40 // mobile marginTop is 40px
+
+    // Calculate cumulative offsets
+    const offsets: number[] = [0]
+    for (let i = 0; i < total; i++) {
+      offsets.push(offsets[i] + heights[i] + margin)
+    }
+    const H_total = offsets[total]
+
+    const p_sticky = offsets[index] / H_total
+    if (p_sticky > 0) {
+      customRange.push(p_sticky)
+      depths.push(0)
+    }
+
+    // Build transition checkpoints for mobile overlap
+    for (let j = index; j < total - 1; j++) {
+      const p_trans_start = (offsets[j] + margin) / H_total
+      const p_trans_end = offsets[j + 1] / H_total
+      const currentDepth = j - index
+
+      customRange.push(p_trans_start)
+      depths.push(currentDepth)
+
+      customRange.push(p_trans_end)
+      depths.push(currentDepth + 1)
+    }
+
+    if (customRange[customRange.length - 1] < 1.0) {
+      customRange.push(1.0)
+      depths.push(depths[depths.length - 1])
+    }
+  }
+
+  // Bind timelines conditionally
   const inputRange = isMobile
-    ? (() => {
-        const range: number[] = []
-        for (let i = 0; i < totalSteps; i++) {
-          range.push(i * step)
-          range.push(i * step + step * 0.6)
-        }
-        range.push(1.0)
-        return range
-      })()
+    ? customRange
     : Array.from({ length: totalSteps + 1 }, (_, i) => i * step)
 
-  const scaleOutput = inputRange.map((_, k) => {
-    if (isMobile) {
-      const rawDepth = k <= 2 * index ? 0 : Math.floor((k - 2 * index) / 2)
-      const depth = Math.min(rawDepth, totalSteps - 1 - index)
-      const factor = 0.05
-      return Math.max(0.7, 1 - (depth * factor))
-    } else {
-      if (k <= index) return 1
-      const activeIndex = Math.min(k, totalSteps - 1)
-      if (activeIndex <= index) return 1
-      const depth = activeIndex - index
-      const factor = 0.065
-      return Math.max(0.7, 1 - (depth * factor))
-    }
-  })
+  const scaleOutput = isMobile
+    ? depths.map(d => Math.max(0.7, 1 - d * 0.05))
+    : inputRange.map((_, idx) => {
+        if (idx <= index) return 1
+        const activeIndex = Math.min(idx, totalSteps - 1)
+        if (activeIndex <= index) return 1
+        const depth = activeIndex - index
+        const factor = 0.065
+        return Math.max(0.7, 1 - (depth * factor))
+      })
 
-  const blurOutput = inputRange.map((_, k) => {
-    if (isMobile) {
-      const rawDepth = k <= 2 * index ? 0 : Math.floor((k - 2 * index) / 2)
-      const depth = Math.min(rawDepth, totalSteps - 1 - index)
-      const factor = 1.5
-      return depth * factor
-    } else {
-      if (k <= index) return 0
-      const activeIndex = Math.min(k, totalSteps - 1)
-      if (activeIndex <= index) return 0
-      const depth = activeIndex - index
-      const factor = 4
-      return depth * factor
-    }
-  })
+  const blurOutput = isMobile
+    ? depths.map(d => d * 1.5)
+    : inputRange.map((_, idx) => {
+        if (idx <= index) return 0
+        const activeIndex = Math.min(idx, totalSteps - 1)
+        if (activeIndex <= index) return 0
+        const depth = activeIndex - index
+        const factor = 4
+        return depth * factor
+      })
 
-  const brightnessOutput = inputRange.map((_, k) => {
-    if (isMobile) {
-      const rawDepth = k <= 2 * index ? 0 : Math.floor((k - 2 * index) / 2)
-      const depth = Math.min(rawDepth, totalSteps - 1 - index)
-      const factor = 0.05
-      return Math.max(0.65, 1 - (depth * factor))
-    } else {
-      if (k <= index) return 1
-      const activeIndex = Math.min(k, totalSteps - 1)
-      if (activeIndex <= index) return 1
-      const depth = activeIndex - index
-      const factor = 0.08
-      return Math.max(0.65, 1 - (depth * factor))
-    }
-  })
+  const brightnessOutput = isMobile
+    ? depths.map(d => Math.max(0.65, 1 - d * 0.05))
+    : inputRange.map((_, idx) => {
+        if (idx <= index) return 1
+        const activeIndex = Math.min(idx, totalSteps - 1)
+        if (activeIndex <= index) return 1
+        const depth = activeIndex - index
+        const factor = 0.08
+        return Math.max(0.65, 1 - (depth * factor))
+      })
 
-  const yOutput = inputRange.map((_, k) => {
-    if (isMobile) {
-      const rawDepth = k <= 2 * index ? 0 : Math.floor((k - 2 * index) / 2)
-      const depth = Math.min(rawDepth, totalSteps - 1 - index)
-      const stepVal = -60
-      return `${depth * stepVal}%`
-    } else {
-      if (k <= index) return '0%'
-      const activeIndex = Math.min(k, totalSteps - 1)
-      if (activeIndex <= index) return '0%'
-      const depth = activeIndex - index
-      const stepVal = -72
-      return `${depth * stepVal}%`
-    }
-  })
+  const yOutput = isMobile
+    ? depths.map(d => `${d * -60}%`)
+    : inputRange.map((_, idx) => {
+        if (idx <= index) return '0%'
+        const activeIndex = Math.min(idx, totalSteps - 1)
+        if (activeIndex <= index) return '0%'
+        const depth = activeIndex - index
+        const stepVal = -72
+        return `${depth * stepVal}%`
+      })
 
-  const zOutput = inputRange.map((_, k) => {
-    if (isMobile) {
-      const rawDepth = k <= 2 * index ? 0 : Math.floor((k - 2 * index) / 2)
-      const depth = Math.min(rawDepth, totalSteps - 1 - index)
-      return depth * -40
-    } else {
-      if (k <= index) return 0
-      const activeIndex = Math.min(k, totalSteps - 1)
-      if (activeIndex <= index) return 0
-      const depth = activeIndex - index
-      return depth * -40
-    }
-  })
+  const zOutput = isMobile
+    ? depths.map(d => d * -40)
+    : inputRange.map((_, idx) => {
+        if (idx <= index) return 0
+        const activeIndex = Math.min(idx, totalSteps - 1)
+        if (activeIndex <= index) return 0
+        const depth = activeIndex - index
+        return depth * -40
+      })
 
   const scale = useTransform(progress, inputRange, scaleOutput, { clamp: true })
   const blurVal = useTransform(progress, inputRange, blurOutput, { clamp: true })
@@ -526,6 +533,7 @@ export default function ServicesSection() {
               progress={scrollYProgress}
               maxHeight={maxHeight}
               onHeightMeasured={handleHeightMeasured}
+              cardHeights={cardHeights}
             />
           ))}
         </div>
