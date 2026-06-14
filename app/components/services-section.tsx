@@ -217,7 +217,6 @@ function ServiceCard({
   const cardRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
-  const [localHeight, setLocalHeight] = useState<number>(0)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -230,9 +229,7 @@ function ServiceCard({
   useEffect(() => {
     const measure = () => {
       if (innerRef.current) {
-        const h = innerRef.current.scrollHeight
-        setLocalHeight(h)
-        onHeightMeasured(index, h)
+        onHeightMeasured(index, innerRef.current.scrollHeight)
       }
     }
     measure()
@@ -240,10 +237,8 @@ function ServiceCard({
     return () => window.removeEventListener('resize', measure)
   }, [index, onHeightMeasured])
 
-  // Sticky top coordinates: 60px on desktop; on mobile, it sticks when its bottom edge reaches 100px from the screen top
-  const triggerPoint = 100
-  const stickyTop = isMobile ? `${triggerPoint - localHeight}px` : '60px'
-
+  // Sticky top coordinates: 60px on desktop; 160px (approx 20%-25%) on mobile to leave reading room
+  const stickyTop = isMobile ? '160px' : '60px'
   const totalSteps = total
 
   const scaleOutput = inputRange.map((_, idx) => {
@@ -278,7 +273,7 @@ function ServiceCard({
     const activeIndex = Math.min(idx, totalSteps - 1)
     if (activeIndex <= index) return '0%'
     const depth = activeIndex - index
-    const stepVal = isMobile ? 0 : -72
+    const stepVal = isMobile ? -60 : -72
     return `${depth * stepVal}%`
   })
 
