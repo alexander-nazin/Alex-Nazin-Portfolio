@@ -21,15 +21,14 @@ export default function Navigation() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY
-      setScrolled(scrollY > 100)
+      setScrolled(window.scrollY > 100)
 
       const aboutEl = document.getElementById('about')
       const toolsEl = document.getElementById('tools')
       let light = false
       const navHeight = 64
 
-      // Detect if we are scrolling over the About section (white background)
+      // Detect if we are currently scrolling over the About section (white background)
       if (aboutEl) {
         const rect = aboutEl.getBoundingClientRect()
         if (rect.top <= navHeight && rect.bottom >= 0) {
@@ -37,7 +36,7 @@ export default function Navigation() {
         }
       }
 
-      // Detect if we are scrolling over the Tools section's white background transition
+      // Detect if we are currently scrolling over the Tools section's white background transition
       if (toolsEl) {
         const rect = toolsEl.getBoundingClientRect()
         if (rect.top <= navHeight && rect.bottom >= 0) {
@@ -140,14 +139,13 @@ export default function Navigation() {
       tEndReset / totalDuration,
       1.0
     ]
-    const defaultColor = isLightBg ? "#212121" : "#ffffff"
     const colors = [
-      defaultColor, // Starts white/dark grey depending on background
-      defaultColor, // Holds white/dark grey until its flip turn
-      "#729E84",    // Becomes green
-      "#729E84",    // Holds green until holdTime
-      defaultColor, // Resets back to white/dark grey
-      defaultColor  // Remains white/dark grey until loop ends
+      "#ffffff", // Starts white
+      "#ffffff", // Holds white until its flip turn
+      "#729E84", // Becomes green
+      "#729E84", // Holds green until holdTime
+      "#ffffff", // Resets back to white
+      "#ffffff"  // Remains white until loop ends
     ]
     const rotateY = [
       0,
@@ -166,11 +164,7 @@ export default function Navigation() {
         initial={{ y: -80 }}
         animate={{ y: scrolled ? 0 : -80 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl border-b transition-all duration-500 ${
-          isLightBg
-            ? 'bg-white/95 border-[#212121]/10 text-[#212121]'
-            : 'bg-[#212121]/90 border-white/[0.06] text-white'
-        }`}
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-2xl border-b transition-colors duration-500 bg-[#212121]/90 border-white/[0.06]"
       >
         <div className="w-full px-8 md:px-12 lg:px-16 xl:px-20 h-16 flex items-center justify-between">
           
@@ -197,7 +191,7 @@ export default function Navigation() {
                     times: times,
                     repeat: Infinity,
                     repeatType: "loop",
-                    repeatDelay: 5 // Holds static state for 5 seconds before repeating
+                    repeatDelay: 5 // Holds static white state for 5 seconds before repeating
                   }}
                   // Applying local perspective and preserve-3d to each letter prevents edge distortion
                   style={{
@@ -252,11 +246,7 @@ export default function Navigation() {
                     }}
                     transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                     onClick={() => handleNavClick(item.href)}
-                    className={`text-[13px] whitespace-nowrap tracking-wide font-mono uppercase transition-colors ${
-                      isLightBg
-                        ? 'text-[#212121]/60 hover:text-[#212121]'
-                        : 'text-white/50 hover:text-white'
-                    }`}
+                    className="text-[13px] whitespace-nowrap tracking-wide text-white/50 hover:text-white font-mono uppercase"
                   >
                     {item.label}
                   </motion.button>
@@ -266,12 +256,8 @@ export default function Navigation() {
 
             {/* Capsule Menu Button */}
             <motion.div
-              className={`flex items-center py-1.5 px-4 h-8 rounded-full border shadow-md text-xs font-mono select-none transition-all duration-500 ${
-                isLightBg
-                  ? 'border-[#212121]/20 bg-[#212121]/5 text-[#212121]/90'
-                  : 'border-white/10 bg-white/5 text-white/90'
-              }`}
-              whileHover={{ scale: 1.05, backgroundColor: isLightBg ? "rgba(33,33,33,0.08)" : "rgba(255,255,255,0.08)" }}
+              className="flex items-center py-1.5 px-4 h-8 rounded-full border border-white/10 bg-white/5 shadow-md text-xs font-mono text-white/90 select-none"
+              whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.08)" }}
               whileTap={{ scale: 0.98 }}
             >
               <span className="font-normal tracking-wider">MENU</span>
@@ -285,16 +271,12 @@ export default function Navigation() {
             aria-label="Menu"
           >
             <span
-              className={`block w-5 h-[1.5px] transition-all duration-300 ${
-                mobileOpen ? 'bg-white/70' : (isLightBg ? 'bg-[#212121]/70' : 'bg-white/70')
-              } ${
+              className={`block w-5 h-[1.5px] transition-all duration-300 bg-white/70 ${
                 mobileOpen ? 'rotate-45 translate-y-[3.25px]' : ''
               }`}
             />
             <span
-              className={`block w-5 h-[1.5px] transition-all duration-300 ${
-                mobileOpen ? 'bg-white/70' : (isLightBg ? 'bg-[#212121]/70' : 'bg-white/70')
-              } ${
+              className={`block w-5 h-[1.5px] transition-all duration-300 bg-white/70 ${
                 mobileOpen ? '-rotate-45 -translate-y-[3.25px]' : ''
               }`}
             />
@@ -321,7 +303,9 @@ export default function Navigation() {
                   ease: [0.22, 1, 0.36, 1],
                 }}
                 onClick={() => handleNavClick(item.href)}
-                className="text-3xl font-heading font-light tracking-wide text-white/70 hover:text-white transition-colors"
+                className={`text-3xl font-heading font-light tracking-wide transition-colors ${
+                  isLightBg ? 'text-[#212121]/70 hover:text-[#212121]' : 'text-white/70 hover:text-white'
+                }`}
               >
                 {item.label}
               </motion.button>
