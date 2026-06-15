@@ -626,6 +626,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
               }
             }
             ctx.save()
+            
             const ax = (c2.x - c1.x) / cardW
             const ay = (c2.y - c1.y) / cardW
             const bx = (c4.x - c1.x) / cardH
@@ -836,6 +837,47 @@ export default function ToolsSection() {
     setCanvasCardsActive(false)
   }
   
+  // Custom scrolling lock with active touch inertia blocker on mobile
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const lenis = (window as any).lenis
+    if (!lenis || !cardsLaunched) return
+    
+    // Halt Lenis scrolling
+    lenis.stop()
+
+    // Emergency physical brake strictly on mobile to halt kinetic touch momentum
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+    }
+
+    if (isMobile) {
+      window.addEventListener('touchmove', handleTouchMove, { passive: false })
+    }
+
+    document.documentElement.style.setProperty('overflow', 'auto', 'important')
+    document.documentElement.style.setProperty('overflow-y', 'scroll', 'important')
+    
+    const timer = setTimeout(() => {
+      lenis.start()
+      if (isMobile) {
+        window.removeEventListener('touchmove', handleTouchMove)
+      }
+      document.documentElement.style.removeProperty('overflow')
+      document.documentElement.style.removeProperty('overflow-y')
+    }, 2000)
+    
+    return () => {
+      clearTimeout(timer)
+      lenis.start()
+      if (isMobile) {
+        window.removeEventListener('touchmove', handleTouchMove)
+      }
+      document.documentElement.style.removeProperty('overflow')
+      document.documentElement.style.removeProperty('overflow-y')
+    }
+  }, [cardsLaunched, isMobile])
+  
   useEffect(() => {
     if (typeof window === 'undefined') return
     const lenis = (window as any).lenis
@@ -919,8 +961,8 @@ export default function ToolsSection() {
           </motion.div>
         </motion.div>
         
-        <motion.div 
-          style={{ opacity: lightBgOpacity }} 
+        <motion.div
+          style={{ opacity: lightBgOpacity }}
           className="absolute inset-0 w-full h-full z-[4] pointer-events-none"
         >
           <div className="relative w-full h-full">
