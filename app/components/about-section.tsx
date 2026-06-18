@@ -271,7 +271,7 @@ export default function AboutSection() {
                         style={{ transformPerspective: '1000px' }}
                       >
                         <p className="text-[14px] lg:text-[15px] xl:text-[16px] text-[#212121]/65 leading-[1.7] lg:leading-[1.85] font-light">
-                          I&apos;m Alex, an instructional designer with ten years of hands-on experience, covering everything from learning strategy and methodology to scriptwriting and final production.
+                          I&apos;m Alex, an instructional designer with ten years of hands-on experience. I handle the full picture – from strategy and methodology to scriptwriting and final production.
                         </p>
                       </motion.div>
                     ) : (
@@ -287,10 +287,10 @@ export default function AboutSection() {
                         style={{ transformPerspective: '1000px' }}
                       >
                         <p className="text-[13.5px] lg:text-[15px] xl:text-[16px] text-[#212121]/65 leading-[1.65] lg:leading-[1.85] font-light">
-                          My background includes six years at ExperTeam, a leading Israeli vendor for organizational learning and training development. Working on a vast range of projects across industries like tech, finance, and healthcare allowed me to build the professional toolbox I use today: the ability to dive into any field and find creative ways to turn complex topics into clear, engaging learning experiences that actually work.
+                          I spent six years at ExperTeam, working on a wide variety of projects across many different domains – complex technical training, organizational change, skill-building, you name it. That&apos;s how I developed the ability to jump into unfamiliar territory, get up to speed fast, and turn complicated ideas into learning that sticks.
                         </p>
                         <p className="text-[13.5px] lg:text-[15px] xl:text-[16px] text-[#212121] leading-[1.65] lg:leading-[1.85] font-semibold">
-                          Whether you need someone for one specific stage or the whole journey - I&apos;m in.
+                          Whether you need someone for one specific stage or the whole journey – I&apos;m in.
                         </p>
                       </motion.div>
                     )}

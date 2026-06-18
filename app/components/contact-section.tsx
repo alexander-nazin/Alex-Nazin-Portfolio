@@ -96,6 +96,7 @@ export default function ContactSection() {
     const unsubscribe = scrollYProgress.onChange
       ? scrollYProgress.onChange(handleChange)
       : scrollYProgress.on('change', handleChange)
+
     return () => {
       if (unsubscribe) unsubscribe()
     }
@@ -154,7 +155,7 @@ export default function ContactSection() {
               Still here? Good.
             </h3>
             <p className="font-mono text-[11px] sm:text-[13px] md:text-[14px] uppercase tracking-[0.25em] opacity-80 mt-2">
-              Time to make something people{" won't "}forget
+              Time to make learning that actually lands
             </p>
           </motion.div>
           
@@ -171,7 +172,7 @@ export default function ContactSection() {
             }`}
           >
             {/* Curtain overlay covering from top */}
-            <div 
+            <div
               className="absolute inset-0 bg-[#212121] transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] z-20"
               style={{ transform: isHovered ? 'translateY(0)' : 'translateY(-100%)' }}
             />
@@ -207,6 +208,7 @@ export default function ContactSection() {
           </motion.button>
         </div>
       </div>
+
       {/* Footer Area - locked at the bottom of the viewport with matching edge gutters */}
       <div className="w-full px-8 md:px-12 lg:px-16 xl:px-20 pb-8 flex items-center justify-between select-none border-t border-white/[0.06] pt-6 z-10">
         <p className="text-[12px] text-white/25 font-mono">© Alex Nazin</p>
