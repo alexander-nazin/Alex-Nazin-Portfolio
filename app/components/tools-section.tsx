@@ -5,12 +5,41 @@ import Image from 'next/image'
 import AnimatedBg from './animated-bg'
 
 const TOOLS_LIST = [
-  { name: 'Articulate 360', logoSrc: '/images/Articulate.webp', bgColor: '#bae6fd', borderColor: '#0369a1' },
-  { name: 'Vyond', logoSrc: '/images/Vyond.webp', bgColor: '#fed7aa', borderColor: '#c2410c' },
-  { name: 'Camtasia', logoSrc: '/images/Camtasia.webp', bgColor: '#bbf7d0', borderColor: '#15803d' },
-  { name: 'Adobe Illustrator', logoSrc: '/images/illustrator.webp', bgColor: '#fde68a', borderColor: '#b45309' },
-  { name: 'Microsoft PowerPoint', logoSrc: '/images/PPT.webp', bgColor: '#fecdd3', borderColor: '#be123c' },
-  { name: 'Generative AI', logoSrc: '/images/Generative AI.webp', bgColor: '#e0e7ff', borderColor: '#6b21a8' },
+  {
+    id: 'card2', // The main green card (symmetrically centered)
+    text: 'That includes the full **Articulate 360** pack, **Adobe creative tools** for graphic design, web-based animation platforms like **Vyond** and **Powtoon**, **Camtasia** and **Premiere** for video production, advanced **PowerPoint**, and an expanding set of **AI tools** for content, visuals, and production.',
+    bgColor: '#8cbfa2', // Lighter HSL lightness (150, 20%, 65%) to let the dark grid lines stand out clearly
+    textColor: '#1a1a1a', // Dark text for excellent readability over the lighter background
+    layoutIdx: 0
+  },
+  {
+    id: 'card3', // The bottom gray card (aligned to the right edge of Card 2)
+    text: 'The list keeps growing, and I like it that way',
+    bgColor: '#f0f0f0', // Soft, light gray (0, 0%, 94%) for crisp line contrast and clean grid visibility
+    textColor: '#212121',
+    layoutIdx: 1
+  }
+]
+
+// Text segment models for the mechanical split-flap rendering
+const CARD_2_PARTS = [
+  { text: "That includes the full ", isBold: false },
+  { text: "Articulate 360", isBold: true },
+  { text: " pack, ", isBold: false },
+  { text: "Adobe", isBold: true },
+  { text: " creative tools for graphic design, web-based animation platforms like ", isBold: false },
+  { text: "Vyond", isBold: true },
+  { text: " and ", isBold: false },
+  { text: "Powtoon", isBold: true },
+  { text: ", ", isBold: false },
+  { text: "Camtasia", isBold: true },
+  { text: " and ", isBold: false },
+  { text: "Premiere", isBold: true },
+  { text: " for video production, advanced ", isBold: false },
+  { text: "PowerPoint", isBold: true },
+  { text: ", and an expanding set of ", isBold: false },
+  { text: "AI tools", isBold: true },
+  { text: " for content, visuals, and production.", isBold: false },
 ]
 
 interface GridPosition {
@@ -20,22 +49,22 @@ interface GridPosition {
   h: number
 }
 
+// Title explicit layout mapping
+const TITLE_LAYOUT = {
+  desktop: { col: 5, row: 1, w: 16, h: 3 },
+  mobile: { col: 0, row: 0, w: 8, h: 3 }
+}
+
+// 14 rows layout grid (Strict 1-square gaps maintained)
 const DESKTOP_LAYOUT: GridPosition[] = [
-  { col: 0, row: 3, w: 3, h: 3 },
-  { col: 6, row: 0, w: 4, h: 4 },
-  { col: 11, row: 5, w: 4, h: 4 },
-  { col: 16, row: 1, w: 5, h: 5 },
-  { col: 4, row: 7, w: 4, h: 4 },
-  { col: 23, row: 5, w: 3, h: 3 },
+  { col: 5, row: 5, w: 16, h: 5 },   // Green card: Symmetrically centered below Title (Gap = row 4)
+  { col: 14, row: 11, w: 7, h: 2 }   // Gray card: Right-aligned relative to green card (14 + 7 = 21) (Gap = row 10)
 ]
 
+// Mobile layout mapping inside centered grid area (8 columns x 14 rows)
 const MOBILE_LAYOUT: GridPosition[] = [
-  { col: 1, row: 0, w: 2, h: 2 },
-  { col: 4, row: 1, w: 3, h: 3 },
-  { col: 0, row: 4, w: 3, h: 3 },
-  { col: 4, row: 6, w: 4, h: 4 },
-  { col: 0, row: 9, w: 3, h: 3 },
-  { col: 4, row: 12, w: 2, h: 2 },
+  { col: 0, row: 4, w: 8, h: 6 },    // Green card (Gap = row 3)
+  { col: 0, row: 11, w: 8, h: 2 }    // Gray card (Gap = row 10)
 ]
 
 interface GridLineProps {
@@ -46,9 +75,9 @@ interface GridLineProps {
 }
 
 const GridLine: React.FC<GridLineProps> = ({ scrollYProgress, position, dir, type }) => {
-  const translatePercent = useTransform(scrollYProgress, [0.52, 0.72], [dir === 1 ? 100 : -100, 0])
+  const translatePercent = useTransform(scrollYProgress, [0.35, 0.55], [dir === 1 ? 100 : -100, 0])
   const translateVal = useMotionTemplate`${translatePercent}%`
-  const opacityVal = useTransform(scrollYProgress, [0.52, 0.56, 0.72], [0, 1, 1])
+  const opacityVal = useTransform(scrollYProgress, [0.35, 0.45, 0.55], [0, 1, 1])
   
   return (
     <motion.div
@@ -82,15 +111,6 @@ interface BlueprintGridProps {
 
 const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLines, cardsLaunched, canvasCardsActive }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const imagesRef = useRef<HTMLImageElement[]>([])
-  
-  useEffect(() => {
-    imagesRef.current = TOOLS_LIST.map((tool) => {
-      const img = new window.Image()
-      img.src = tool.logoSrc
-      return img
-    })
-  }, [])
   
   useEffect(() => {
     const canvas = canvasRef.current
@@ -181,11 +201,14 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     }
     
     const handleMouseMove = (e: MouseEvent) => {
+      // Grid is interactive ONLY after canvasCardsActive (gray tile revealed) is active
+      if (!canvasCardsActive) return
       const isMobileDevice = window.innerWidth < 768
       if (isMobileDevice) return
       
       const rect = canvas.getBoundingClientRect()
-      const isStickyActive = Math.abs(rect.top) < 10
+      const scrollVal = scrollYProgress.get()
+      const isStickyActive = scrollVal > 0.01 && scrollVal < 0.99
       const isInside =
         e.clientX >= rect.left &&
         e.clientX <= rect.right &&
@@ -210,9 +233,12 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     }
     
     const handleMouseDown = (e: MouseEvent) => {
+      // Grid is interactive ONLY after canvasCardsActive (gray tile revealed) is active
+      if (!canvasCardsActive) return
       const isMobileDevice = window.innerWidth < 768
       const rect = canvas.getBoundingClientRect()
-      const isStickyActive = Math.abs(rect.top) < 10
+      const scrollVal = scrollYProgress.get()
+      const isStickyActive = scrollVal > 0.01 && scrollVal < 0.99
       const isInside =
         e.clientX >= rect.left &&
         e.clientX <= rect.right &&
@@ -240,9 +266,12 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     }
     
     const handleTouchStart = (e: TouchEvent) => {
+      // Grid is interactive ONLY after canvasCardsActive (gray tile revealed) is active
+      if (!canvasCardsActive) return
       if (e.touches.length > 0) {
         const rect = canvas.getBoundingClientRect()
-        const isStickyActive = Math.abs(rect.top) < 10
+        const scrollVal = scrollYProgress.get()
+        const isStickyActive = scrollVal > 0.01 && scrollVal < 0.99
         const touch = e.touches[0]
         const isInside =
           touch.clientX >= rect.left &&
@@ -272,12 +301,15 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
     }
     
     const handleTouchMove = (e: TouchEvent) => {
+      // Grid is interactive ONLY after canvasCardsActive (gray tile revealed) is active
+      if (!canvasCardsActive) return
       const isMobileDevice = window.innerWidth < 768
       if (isMobileDevice) return
       
       if (e.touches.length > 0) {
         const rect = canvas.getBoundingClientRect()
-        const isStickyActive = Math.abs(rect.top) < 10
+        const scrollVal = scrollYProgress.get()
+        const isStickyActive = scrollVal > 0.01 && scrollVal < 0.99
         const touch = e.touches[0]
         const isInside =
           touch.clientX >= rect.left &&
@@ -391,13 +423,14 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
       const isMobileDevice = screenW < 768
       const layout = isMobileDevice ? MOBILE_LAYOUT : DESKTOP_LAYOUT
       const layoutWidth = isMobileDevice ? 8 : 26
-      const layoutHeight = isMobileDevice ? 14 : 11
+      const layoutHeight = isMobileDevice ? 14 : 14
       const squareSize = gridLines.squareSize || 50
       const colOffset = Math.max(0, Math.floor((gridLines.cols - layoutWidth) / 2))
       const rowOffset = Math.max(0, Math.floor((gridLines.rows - layoutHeight) / 2))
       const nodesColOffset = gridLines.vertical.filter(x => x < gridLines.padLeft).length
       const nodesRowOffset = gridLines.horizontal.filter(y => y < gridLines.padTop).length
-      
+
+      // Helper routines mapping mouse distances to grid opacities (restored to correct file scope)
       const getOpacityAtPoint = (dist: number) => {
         if (dist >= influenceRadius || dist <= 0) return 0.14
         const force = (influenceRadius - dist) / influenceRadius
@@ -413,16 +446,11 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
         return hoveredOpacity + (0.60 - hoveredOpacity) * clickFactor
       }
       
-      if (numCols === 0 || numRows === 0) {
-        ctx.restore()
-        animId = requestAnimationFrame(draw)
-        return
-      }
-      
       const scrollVal = scrollYProgress.get()
-      const lineProgress = Math.max(0, Math.min(1, (scrollVal - 0.52) / (0.72 - 0.52)))
-      const lineOpacity = Math.max(0, Math.min(1, (scrollVal - 0.52) / (0.56 - 0.52)))
-      const dotProgress = Math.max(0, Math.min(1, (scrollVal - 0.68) / (0.78 - 0.68)))
+      // Stretched grid built animation: drawing lines from [0.35, 0.65], dots appearing over [0.60, 0.70]
+      const lineProgress = Math.max(0, Math.min(1, (scrollVal - 0.35) / (0.65 - 0.35)))
+      const lineOpacity = Math.max(0, Math.min(1, (scrollVal - 0.35) / (0.55 - 0.35)))
+      const dotProgress = Math.max(0, Math.min(1, (scrollVal - 0.60) / (0.70 - 0.60)))
       ctx.lineWidth = 1
       
       const nodes: { x: number; y: number }[][] = []
@@ -443,7 +471,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
               const dx = trailMouse.x - baseX
               const dy = trailMouse.y - baseY
               const dist = Math.sqrt(dx * dx + dy * dy)
-              const finalInfluence = canvasCardsActive ? influenceRadius : 0
+              const finalInfluence = cardsLaunched ? influenceRadius : 0
               if (finalInfluence > 0 && dist < finalInfluence && dist > 0) {
                 const power = Math.pow(1 - dist / finalInfluence, 1.5)
                 tx = baseX + dx * power * strength * currentMultiplier
@@ -486,7 +514,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
           const dx = trailMouse.x - baseX
           const dy = trailMouse.y - baseY
           const dist = Math.sqrt(dx * dx + dy * dy)
-          const finalInfluence = canvasCardsActive ? influenceRadius : 0
+          const finalInfluence = cardsLaunched ? influenceRadius : 0
           if (finalInfluence > 0 && dist < finalInfluence && dist > 0) {
             const power = Math.pow(1 - dist / finalInfluence, 1.5)
             tx += dx * power * strength * currentMultiplier
@@ -496,6 +524,114 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
           return { x: tx, y: ty }
         }
         
+        // Calculate scroll-linked values for each card inside canvas draw loop
+        // Tile entries now run at constant 1.0 opacity once triggered to enable solid non-fading expansions
+        const c2Opacity = scrollVal >= 0.78 ? 1.0 : 0.0
+        const c2Clip = Math.max(0, Math.min(100, ((scrollVal - 0.78) / (0.82 - 0.78)) * 100))
+        const c2Scale = Math.max(0, Math.min(1, (scrollVal - 0.75) / (0.78 - 0.75)))
+        
+        const c3Opacity = scrollVal >= 0.85 ? 1.0 : 0.0
+        const c3Clip = Math.max(0, Math.min(100, ((scrollVal - 0.85) / (0.87 - 0.85)) * 100))
+        const c3Scale = Math.max(0, Math.min(1, (scrollVal - 0.83) / (0.85 - 0.83)))
+
+        // DRAW TILES FIRST (So lines and dots naturally render on top)
+        TOOLS_LIST.forEach((tool) => {
+          if (tool.bgColor === 'transparent') return
+          const cardPos = layout[tool.layoutIdx]
+          if (!cardPos) return
+          
+          const colIndex = nodesColOffset + colOffset + cardPos.col
+          const rowIndex = nodesRowOffset + rowOffset + cardPos.row
+          
+          const opacity = tool.id === 'card2' ? c2Opacity : c3Opacity
+          const clipRight = tool.id === 'card2' ? c2Clip : c3Clip
+          const scale = tool.id === 'card2' ? c2Scale : c3Scale
+          
+          const c1 = getNode(colIndex, rowIndex)
+          const c2 = getNode(colIndex + cardPos.w, rowIndex)
+          const c3 = getNode(colIndex + cardPos.w, rowIndex + cardPos.h)
+          const c4 = getNode(colIndex, rowIndex + cardPos.h)
+          
+          // Draw card backgrounds only if opacity is fully triggered (> 0)
+          if (opacity > 0) {
+            ctx.save()
+            
+            // Bidirectional expansion mask revealing simultaneously from top-left (cross location c1) toward bottom-right
+            if (clipRight < 100) {
+              const t = clipRight / 100
+              
+              // Top-Right edge point (along c1 -> c2)
+              const topClipX = c1.x + (c2.x - c1.x) * t
+              const topClipY = c1.y + (c2.y - c1.y) * t
+              
+              // Bottom-Left edge point (along c1 -> c4)
+              const leftClipX = c1.x + (c4.x - c1.x) * t
+              const leftClipY = c1.y + (c4.y - c1.y) * t
+              
+              // Bottom-Right corner point (bilinear interpolation inside quad of c1, c2, c3, c4 at coordinate t, t)
+              const diagClipX = c1.x + (c2.x - c1.x) * t + (c4.x - c1.x) * t + (c3.x - c2.x - c4.x + c1.x) * t * t
+              const diagClipY = c1.y + (c2.y - c1.y) * t + (c4.y - c1.y) * t + (c3.y - c2.y - c4.y + c1.y) * t * t
+              
+              ctx.beginPath()
+              ctx.moveTo(c1.x, c1.y)
+              ctx.lineTo(topClipX, topClipY)
+              ctx.lineTo(diagClipX, diagClipY)
+              ctx.lineTo(leftClipX, leftClipY)
+              ctx.closePath()
+              ctx.clip()
+            }
+            
+            // Render each grid square of the tile individually so it follows warp non-linearly
+            for (let u = 0; u < cardPos.w; u++) {
+              for (let v = 0; v < cardPos.h; v++) {
+                const sc1 = getNode(colIndex + u, rowIndex + v)
+                const sc2 = getNode(colIndex + u + 1, rowIndex + v)
+                const sc3 = getNode(colIndex + u + 1, rowIndex + v + 1)
+                const sc4 = getNode(colIndex + u, rowIndex + v + 1)
+                
+                ctx.globalAlpha = opacity
+                
+                // 1. Fill base card background color
+                ctx.fillStyle = tool.bgColor
+                ctx.beginPath()
+                ctx.moveTo(sc1.x, sc1.y)
+                ctx.lineTo(sc2.x, sc2.y)
+                ctx.lineTo(sc3.x, sc3.y)
+                ctx.lineTo(sc4.x, sc4.y)
+                ctx.closePath()
+                ctx.fill()
+                
+                // 2. Blend the 5% bright white overlay directly inside the exact same path!
+                // This resolves any edge-alignment artifacts and completely prevents dark borders when warped.
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'
+                ctx.fill()
+              }
+            }
+            ctx.restore()
+          }
+          
+          // Draw crosshair at the top-left corner node c1 inside the canvas
+          // Runs if scale > 0, which occurs before card opacity is triggered (crosshair appears first, then card!)
+          const easedScale = Math.sin(scale * Math.PI / 2)
+          const size = 6 * easedScale
+          if (size > 0) {
+            ctx.save()
+            ctx.globalAlpha = scale
+            ctx.strokeStyle = '#212121'
+            ctx.lineWidth = 1.5
+            ctx.beginPath()
+            ctx.moveTo(c1.x - size, c1.y)
+            ctx.lineTo(c1.x + size, c1.y)
+            ctx.moveTo(c1.x, c1.y - size)
+            ctx.lineTo(c1.x, c1.y + size)
+            ctx.stroke()
+            ctx.restore()
+          }
+          
+          ctx.globalAlpha = 1.0 // Reset alpha
+        })
+        
+        // NOW DRAW LINES AND DOTS ON TOP OF THE CARDS
         for (let j = 0; j < numRows; j++) {
           for (let i = 0; i < numCols - 1; i++) {
             const p1 = nodes[i]?.[j]
@@ -596,73 +732,6 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
             ctx.fill()
           }
         }
-        
-        if (canvasCardsActive) {
-          TOOLS_LIST.forEach((tool, idx) => {
-            const cardPos = layout[idx]
-            if (!cardPos) return
-            const colIndex = nodesColOffset + colOffset + cardPos.col
-            const rowIndex = nodesRowOffset + rowOffset + cardPos.row
-            const c1 = getNode(colIndex, rowIndex)
-            const c2 = getNode(colIndex + cardPos.w, rowIndex)
-            const c4 = getNode(colIndex, rowIndex + cardPos.h)
-            const cardW = cardPos.w * squareSize + 2
-            const cardH = cardPos.h * squareSize + 2
-            
-            for (let u = 0; u < cardPos.w; u++) {
-              for (let v = 0; v < cardPos.h; v++) {
-                const sc1 = getNode(colIndex + u, rowIndex + v)
-                const sc2 = getNode(colIndex + u + 1, rowIndex + v)
-                const sc3 = getNode(colIndex + u + 1, rowIndex + v + 1)
-                const sc4 = getNode(colIndex + u, rowIndex + v + 1)
-                ctx.fillStyle = tool.bgColor
-                ctx.beginPath()
-                ctx.moveTo(sc1.x, sc1.y)
-                ctx.lineTo(sc2.x, sc2.y)
-                ctx.lineTo(sc3.x, sc3.y)
-                ctx.lineTo(sc4.x, sc4.y)
-                ctx.closePath()
-                ctx.fill()
-              }
-            }
-            ctx.save()
-            
-            const ax = (c2.x - c1.x) / cardW
-            const ay = (c2.y - c1.y) / cardW
-            const bx = (c4.x - c1.x) / cardH
-            const by = (c4.y - c1.y) / cardH
-            ctx.transform(ax, ay, bx, by, c1.x, c1.y)
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'
-            ctx.fillRect(0, 0, cardW, cardH)
-            
-            const logoImg = imagesRef.current[idx]
-            if (logoImg && logoImg.complete) {
-              const maxW = cardW * 0.6
-              const maxH = cardH * 0.6
-              const imgRatio = logoImg.naturalWidth / logoImg.naturalHeight
-              const containerRatio = maxW / maxH
-              let logoW = maxW
-              let logoH = maxH
-              if (imgRatio > containerRatio) {
-                logoH = maxW / imgRatio
-              } else {
-                logoW = maxH * imgRatio
-              }
-              ctx.imageSmoothingEnabled = true
-              ctx.imageSmoothingQuality = 'high'
-              ctx.drawImage(logoImg, (cardW - logoW) / 2, (cardH - logoH) / 2, logoW, logoH)
-            }
-            ctx.restore()
-            ctx.strokeStyle = '#212121'
-            ctx.lineWidth = 1.5
-            ctx.beginPath()
-            ctx.moveTo(c1.x - 6, c1.y)
-            ctx.lineTo(c1.x + 6, c1.y)
-            ctx.moveTo(c1.x, c1.y - 6)
-            ctx.lineTo(c1.x, c1.y + 6)
-            ctx.stroke()
-          })
-        }
       } else {
         ctx.strokeStyle = `rgba(33, 33, 33, ${0.14 * lineOpacity})`
         for (let i = 0; i < numCols; i++) {
@@ -719,11 +788,10 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
 }
 
 interface CornerCrossHairProps {
-  style: React.CSSProperties
+  style: any
   idx: number
   crossVariants: any
 }
-
 const CornerCrossHair: React.FC<CornerCrossHairProps> = ({ style, idx, crossVariants }) => {
   return (
     <motion.div
@@ -752,6 +820,9 @@ export default function ToolsSection() {
   const [isMobile, setIsMobile] = useState(false)
   const [cardsLaunched, setCardsLaunched] = useState(false)
   const [canvasCardsActive, setCanvasCardsActive] = useState(false)
+  const [revealText1, setRevealText1] = useState(false)
+  const [revealText2, setRevealText2] = useState(false)
+  const [revealText3, setRevealText3] = useState(false)
   const [gridData, setGridData] = useState<{ vertical: number[], horizontal: number[], squareSize: number, cols: number, rows: number, padLeft: number, padTop: number }>({ vertical: [], horizontal: [], squareSize: 50, cols: 0, rows: 0, padLeft: 0, padTop: 0 })
   
   useEffect(() => {
@@ -774,7 +845,7 @@ export default function ToolsSection() {
       
       const squareSize = isMob
         ? Math.min(Math.floor((w - padX) / 8), Math.floor(activeHeight / 14))
-        : 50
+        : Math.max(45, Math.min(Math.floor(w / 28), Math.floor(h / 14.5)))
         
       const cols = isMob ? 8 : Math.floor(w / squareSize)
       const rows = isMob ? 14 : Math.floor(h / squareSize)
@@ -806,142 +877,86 @@ export default function ToolsSection() {
   
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] })
   
-  const { scrollYProgress: entryProgress } = useScroll({
-    target: containerRef,
-    offset: ['start end', 'start start']
+  // Custom staggered timeline matching exact sequential reveal requirements
+  // 1. Title fades in and floats up from [0.70, 0.74] (completes after the longer grid build finishes at 0.70)
+  const card1Opacity = useTransform(scrollYProgress, [0.70, 0.74], [0, 1])
+  const card1Y = useTransform(scrollYProgress, [0.70, 0.74], [30, 0])
+  
+  // 2. Card Opacities: step functions that turn on instantly at the start of expansion to prevent premature fade-in
+  const card2Opacity = useTransform(scrollYProgress, (latest) => latest >= 0.78 ? 1 : 0)
+  const card3Opacity = useTransform(scrollYProgress, (latest) => latest >= 0.85 ? 1 : 0)
+
+  // 3. Dedicated Text Opacities: stay strictly invisible during tile expansion, and fade in only after the tile is revealed
+  const card2TextOpacity = useTransform(scrollYProgress, [0.81, 0.82], [0, 1])
+  const card3TextOpacity = useTransform(scrollYProgress, [0.86, 0.87], [0, 1])
+  
+  const card2CrossScale = useTransform(scrollYProgress, [0.75, 0.78], [0, 1])
+  const card2CrossOpacity = useTransform(scrollYProgress, (latest) => {
+    if (latest >= 0.88) return 0
+    if (latest >= 0.75 && latest < 0.78) return (latest - 0.75) / 0.03
+    if (latest >= 0.78) return 1
+    return 0
   })
+  
+  const card2ClipRight = useTransform(scrollYProgress, [0.78, 0.82], [0, 100])
+  const card2TextClip = useTransform(scrollYProgress, [0.81, 0.84], [100, 0])
+  
+  const card3CrossScale = useTransform(scrollYProgress, [0.83, 0.85], [0, 1])
+  const card3CrossOpacity = useTransform(scrollYProgress, (latest) => {
+    if (latest >= 0.88) return 0
+    if (latest >= 0.83 && latest < 0.85) return (latest - 0.83) / 0.02
+    if (latest >= 0.85) return 1
+    return 0
+  })
+  
+  const card3ClipRight = useTransform(scrollYProgress, [0.85, 0.87], [0, 100])
+  const card3TextClip = useTransform(scrollYProgress, [0.86, 0.88], [100, 0])
   
   useEffect(() => {
     if (!scrollYProgress) return
     const handleChange = (latest: number) => {
-      if (latest >= 0.76) setCardsLaunched(true)
-      else if (latest < 0.73) setCardsLaunched(false)
+      // Background grid structures trigger responsive interaction precisely at 0.70
+      if (latest >= 0.70) setCardsLaunched(true)
+      else setCardsLaunched(false)
+      
+      // Trigger text reveals
+      setRevealText1(latest >= 0.74)
+      setRevealText2(latest >= 0.84)
+      setRevealText3(latest >= 0.88)
+      
+      // Grid becomes fully interactive on cards at 0.88 (once Card 3 text finishes drawing)
+      if (latest >= 0.88) setCanvasCardsActive(true)
+      else setCanvasCardsActive(false)
     }
-    const unsubscribe = scrollYProgress.onChange(handleChange)
+    const unsubscribe = scrollYProgress.onChange
+      ? scrollYProgress.onChange(handleChange)
+      : scrollYProgress.on('change', handleChange)
     return () => unsubscribe()
   }, [scrollYProgress])
   
-  useEffect(() => {
-    let timer: NodeJS.Timeout
-    if (cardsLaunched) {
-      timer = setTimeout(() => {
-        setCanvasCardsActive(true)
-      }, 2000)
-    } else {
-      setCanvasCardsActive(false)
-    }
-    return () => clearTimeout(timer)
-  }, [cardsLaunched])
-  
-  if (!cardsLaunched && canvasCardsActive) {
-    setCanvasCardsActive(false)
-  }
-  
-  // Custom scrolling lock with active touch inertia blocker on mobile
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const lenis = (window as any).lenis
-    if (!lenis || !cardsLaunched) return
-    
-    // Halt Lenis scrolling
-    lenis.stop()
-
-    // Emergency physical brake strictly on mobile to halt kinetic touch momentum
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault()
-    }
-
-    if (isMobile) {
-      window.addEventListener('touchmove', handleTouchMove, { passive: false })
-    }
-
-    document.documentElement.style.setProperty('overflow', 'auto', 'important')
-    document.documentElement.style.setProperty('overflow-y', 'scroll', 'important')
-    
-    const timer = setTimeout(() => {
-      lenis.start()
-      if (isMobile) {
-        window.removeEventListener('touchmove', handleTouchMove)
-      }
-      document.documentElement.style.removeProperty('overflow')
-      document.documentElement.style.removeProperty('overflow-y')
-    }, 2000)
-    
-    return () => {
-      clearTimeout(timer)
-      lenis.start()
-      if (isMobile) {
-        window.removeEventListener('touchmove', handleTouchMove)
-      }
-      document.documentElement.style.removeProperty('overflow')
-      document.documentElement.style.removeProperty('overflow-y')
-    }
-  }, [cardsLaunched, isMobile])
-  
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const lenis = (window as any).lenis
-    if (!lenis || !cardsLaunched) return
-    lenis.stop()
-    document.documentElement.style.setProperty('overflow', 'auto', 'important')
-    document.documentElement.style.setProperty('overflow-y', 'scroll', 'important')
-    
-    const timer = setTimeout(() => {
-      lenis.start()
-      document.documentElement.style.removeProperty('overflow')
-      document.documentElement.style.removeProperty('overflow-y')
-    }, 2000)
-    
-    return () => {
-      clearTimeout(timer)
-      lenis.start()
-    }
-  }, [cardsLaunched])
-  
   const bgOpacity = useTransform(
     scrollYProgress,
-    [0, 0.1, 0.46, 0.46],
+    [0, 0.1, 0.35, 0.35],
     [0, 1, 1, 0]
   )
   
-  const textOpacity = useTransform(scrollYProgress, (pos) => (pos < 0.46 ? 1 : 0))
-  const lightBgOpacity = useTransform(scrollYProgress, (pos) => (pos < 0.46 ? 0 : 1))
-  const textScale = useTransform(scrollYProgress, [0.0, 0.25, 0.37, 0.45, 0.46], [1, 2.2, 8, 35, 160])
+  const textOpacity = useTransform(scrollYProgress, (pos) => (pos < 0.35 ? 1 : 0))
+  const lightBgOpacity = useTransform(scrollYProgress, (pos) => (pos < 0.35 ? 0 : 1))
+  const textScale = useTransform(scrollYProgress, [0.0, 0.20, 0.29, 0.34, 0.35], [1, 2.2, 8, 35, 160])
   const transformOrigin = isMobile ? '49.3% 41.5%' : '49.3% 52%'
+  
   const layout = isMobile ? MOBILE_LAYOUT : DESKTOP_LAYOUT
+  const titleLayout = isMobile ? TITLE_LAYOUT.mobile : TITLE_LAYOUT.desktop
+  
   const colOffset = Math.max(0, Math.floor((gridData.cols - (isMobile ? 8 : 26)) / 2))
-  const rowOffset = Math.max(0, Math.floor((gridData.rows - (isMobile ? 14 : 11)) / 2))
+  const rowOffset = Math.max(0, Math.floor((gridData.rows - (isMobile ? 14 : 14)) / 2))
   const lineWidth = 2
   
-  const cardVariants = {
-    hidden: {
-      opacity: 0,
-      pointerEvents: "none" as const,
-      transition: {
-        duration: 0.2,
-        delay: 0.6
-      }
-    },
-    visible: { opacity: 1, pointerEvents: "auto" as const, transition: { duration: 0.01 } }
-  }
-  
-  const crossVariants = {
-    hidden: (idx: number) => ({ opacity: 0, scale: 0, transition: { duration: 0.2, ease: "easeIn", delay: (5 - idx) * 0.05 + 0.35 } }),
-    visible: (idx: number) => ({ opacity: 1, scale: 1, transition: { type: "spring", stiffness: 120, damping: 14, delay: idx * 0.1 + 0.90 } })
-  }
-  
-  const fillVariants = {
-    hidden: (idx: number) => ({ clipPath: "inset(0% 100% 100% 0%)", transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: (5 - idx) * 0.05 + 0.15 } }),
-    visible: (idx: number) => ({ clipPath: "inset(0% 0% 0% 0%)", transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: idx * 0.1 + 0.35 } })
-  }
-  
-  const contentVariants = {
-    hidden: (idx: number) => ({ opacity: 0, y: 15, scale: 0.85, transition: { duration: 0.2, ease: "easeIn", delay: (5 - idx) * 0.05 } }),
-    visible: (idx: number) => ({ opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 120, damping: 14, delay: idx * 0.1 + 0.90 } })
-  }
+  const card2TextClipPath = useMotionTemplate`inset(0% 0% ${card2TextClip}% 0%)`
+  const card3TextClipPath = useMotionTemplate`inset(0% 0% ${card3TextClip}% 0%)`
   
   return (
-    <div ref={containerRef} id="tools" className="relative h-[450vh] w-full">
+    <div ref={containerRef} id="tools" className="relative h-[600vh] w-full">
       <div className="sticky top-0 left-0 h-[100dvh] w-full flex items-center justify-center overflow-hidden z-[4]">
         <motion.div style={{ opacity: bgOpacity }} className="fixed inset-0 z-[2] pointer-events-none">
           <AnimatedBg />
@@ -957,7 +972,7 @@ export default function ToolsSection() {
         <motion.div style={{ opacity: textOpacity }} className="absolute inset-0 flex items-center justify-center pointer-events-none z-[3]">
           <motion.div style={{ scale: textScale, transformOrigin }} className="relative flex flex-col items-end w-fit h-fit px-8">
             <h2 className="font-heading text-[15vw] font-bold leading-[0.9] tracking-tight text-white uppercase select-none">Creative</h2>
-            <p className="font-mono text-[2.2vw] font-light tracking-widest text-[#729E84] uppercase whitespace-nowrap leading-none mt-6 select-none">Development Stack</p>
+            <p className="font-mono text-[3vw] font-medium tracking-[0.25em] text-[#729E84] uppercase whitespace-nowrap leading-none mt-6 select-none">TOOLBOX</p>
           </motion.div>
         </motion.div>
         
@@ -966,19 +981,42 @@ export default function ToolsSection() {
           className="absolute inset-0 w-full h-full z-[4] pointer-events-none"
         >
           <div className="relative w-full h-full">
+            
+            {/* Standard Section Heading / Title: "I work with..." aligned cleanly with grid constraints */}
+            {gridData.squareSize > 0 && (
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  left: `${gridData.padLeft + (colOffset + titleLayout.col) * gridData.squareSize}px`,
+                  top: `${gridData.padTop + (rowOffset + titleLayout.row) * gridData.squareSize}px`,
+                  width: `${titleLayout.w * gridData.squareSize}px`,
+                  height: `${titleLayout.h * gridData.squareSize}px`,
+                  paddingLeft: isMobile ? '1rem' : '0px',
+                  paddingRight: isMobile ? '1rem' : '0px',
+                  opacity: card1Opacity,
+                  y: card1Y,
+                }}
+                className="pointer-events-none z-[10] flex flex-col justify-end items-start overflow-visible text-left pb-1 md:pb-2"
+              >
+                <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-[45px] font-bold tracking-tight text-[#212121] leading-[1.1] w-full">
+                  I work with a <span className="font-serif italic font-normal text-[#729E84]">wide range</span> of tools to bring learning experiences to life – whatever the project calls{"\u00A0"}for
+                </h2>
+              </motion.div>
+            )}
+            
             {gridData.squareSize > 0 && TOOLS_LIST.map((tool, idx) => {
-              const cardPos = layout[idx]
+              const cardPos = layout[tool.layoutIdx]
               if (!cardPos) return null
               const left = gridData.padLeft + (cardPos.col + colOffset) * gridData.squareSize
               const top = gridData.padTop + (cardPos.row + rowOffset) * gridData.squareSize
               const width = cardPos.w * gridData.squareSize + lineWidth
               const height = cardPos.h * gridData.squareSize + lineWidth
+              
+              const textOpacityVal = tool.id === 'card2' ? card2TextOpacity : card3TextOpacity
+              const textClipPathVal = tool.id === 'card2' ? card2TextClipPath : card3TextClipPath
               return (
                 <motion.div
-                  key={tool.name}
-                  custom={idx}
-                  variants={cardVariants}
-                  animate={cardsLaunched ? "visible" : "hidden"}
+                  key={tool.id}
                   style={{
                     position: 'absolute',
                     left: `${left}px`,
@@ -986,27 +1024,31 @@ export default function ToolsSection() {
                     width: `${width}px`,
                     height: `${height}px`,
                     transformOrigin: 'top left',
+                    pointerEvents: 'none'
                   }}
-                  className="rounded-none flex items-center justify-center select-none pointer-events-auto overflow-visible"
+                  className="rounded-none select-none overflow-visible z-[10]"
                 >
-                  <div
+                  {/* HTML solid backgrounds and crosshairs have been fully removed. 
+                      They are drawn inside the Canvas render layer to support reactive physical movement on hover. */}
+                  
+                  {/* HTML text layer overlay with scroll-linked downward mask wipe */}
+                  <motion.div
                     style={{
-                      position: 'absolute',
-                      inset: 0,
-                      opacity: canvasCardsActive ? 0 : 1,
-                      transition: canvasCardsActive ? 'opacity 0.25s ease-in-out' : 'none',
-                      pointerEvents: canvasCardsActive ? 'none' : 'auto'
+                      clipPath: textClipPathVal,
+                      opacity: textOpacityVal,
                     }}
-                    className="flex items-center justify-center w-full h-full"
+                    className="absolute inset-0 flex flex-col justify-center items-start z-[2] px-8 md:px-10 text-left pointer-events-none"
                   >
-                    <CornerCrossHair style={{ left: '-6px', top: '-6px' }} idx={idx} crossVariants={crossVariants} />
-                    <motion.div variants={fillVariants} custom={idx} style={{ position: 'absolute', inset: 0, backgroundColor: tool.bgColor }} className="overflow-hidden animate-none">
-                      <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`, opacity: 0.15, mixBlendMode: 'multiply' }} className="pointer-events-none w-full h-full" />
-                    </motion.div>
-                    <motion.div custom={idx} variants={contentVariants} className="relative w-[60%] h-[60%] flex items-center justify-center z-[2]">
-                      <Image src={tool.logoSrc} alt={tool.name} fill priority={idx < 3} className="object-contain" />
-                    </motion.div>
-                  </div>
+                    {tool.id === 'card2' ? (
+                      <p className="font-sans font-medium text-sm sm:text-base md:text-lg lg:text-[19px] leading-relaxed" style={{ color: tool.textColor }}>
+                        That includes the full <strong>Articulate 360</strong> pack, <strong>Adobe creative tools</strong> for graphic design, web-based animation platforms like <strong>Vyond</strong> and <strong>Powtoon</strong>, <strong>Camtasia</strong> and <strong>Premiere</strong> for video production, advanced <strong>PowerPoint</strong>, and an expanding set of <strong>AI tools</strong> for content, visuals, and production.
+                      </p>
+                    ) : (
+                      <p className="font-sans font-bold text-base sm:text-lg md:text-xl lg:text-[22px] uppercase leading-snug tracking-wider" style={{ color: tool.textColor }}>
+                        {tool.text}
+                      </p>
+                    )}
+                  </motion.div>
                 </motion.div>
               )
             })}
