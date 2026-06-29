@@ -14,7 +14,7 @@ const TOOLS_LIST = [
   },
   {
     id: 'card3', // The bottom gray card (aligned to the right edge of Card 2)
-    text: 'The list keeps growing, and I like it that way',
+    text: 'The list keeps growing, and I like it that way.',
     bgColor: '#f0f0f0', // Soft, light gray (0, 0%, 94%) for crisp line contrast and clean grid visibility
     textColor: '#212121',
     layoutIdx: 1
@@ -611,7 +611,7 @@ const BlueprintGrid: React.FC<BlueprintGridProps> = ({ scrollYProgress, gridLine
           }
           
           // Draw crosshair at the top-left corner node c1 inside the canvas
-          // Runs if scale > 0, which occurs before card opacity is triggered (crosshair appears first, then card!)
+          // eassScale applies a soft sine ease-out growth so it expands organically from the lines intersection
           const easedScale = Math.sin(scale * Math.PI / 2)
           const size = 6 * easedScale
           if (size > 0) {
@@ -943,7 +943,9 @@ export default function ToolsSection() {
   const textOpacity = useTransform(scrollYProgress, (pos) => (pos < 0.35 ? 1 : 0))
   const lightBgOpacity = useTransform(scrollYProgress, (pos) => (pos < 0.35 ? 0 : 1))
   const textScale = useTransform(scrollYProgress, [0.0, 0.20, 0.29, 0.34, 0.35], [1, 2.2, 8, 35, 160])
-  const transformOrigin = isMobile ? '49.3% 41.5%' : '49.3% 52%'
+  
+  // Calibrated vertical percentages of the transform origin to ensure we zoom perfectly into the horizontal bar of 'A' in 'CREATIVE'
+  const transformOrigin = isMobile ? '49.3% 39.5%' : '49.3% 45%'
   
   const layout = isMobile ? MOBILE_LAYOUT : DESKTOP_LAYOUT
   const titleLayout = isMobile ? TITLE_LAYOUT.mobile : TITLE_LAYOUT.desktop
