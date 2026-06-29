@@ -14,7 +14,7 @@ const TOOLS_LIST = [
   },
   {
     id: 'card3', // The bottom gray card (aligned to the right edge of Card 2)
-    text: 'The list keeps growing, and I like it that way.',
+    text: 'The list keeps growing, and I like it that way',
     bgColor: '#f0f0f0', // Soft, light gray (0, 0%, 94%) for crisp line contrast and clean grid visibility
     textColor: '#212121',
     layoutIdx: 1
