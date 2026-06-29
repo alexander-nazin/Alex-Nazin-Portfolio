@@ -187,13 +187,13 @@ export default function AboutSection() {
       </div>
       
       {/* Centered container */}
-      <div className="w-full px-8 md:px-12 lg:px-16 xl:px-20 relative pt-10 md:pt-24 lg:pt-36 pb-0 flex-1 flex flex-col justify-between">
+      <div className="w-full px-8 md:px-12 lg:px-16 xl:px-20 relative pt-10 md:pt-24 lg:pt-36 pb-12 lg:pb-0 flex-1 flex flex-col justify-between">
         <div className="max-w-[1400px] xl:max-w-[1500px] 2xl:max-w-[1600px] mx-auto w-full relative flex-1 flex flex-col justify-center">
           
           <div className="grid grid-cols-1 lg:grid-cols-[auto,1fr] gap-y-0 lg:gap-12 xl:gap-16 items-stretch relative lg:min-h-[650px] xl:min-h-[700px] w-full">
             
             {/* Left Column Container */}
-            <div className="pt-8 pb-12 lg:py-12 max-w-2xl lg:max-w-[650px] xl:max-w-[750px] w-full flex flex-col justify-center relative z-[2]">
+            <div className="pt-4 pb-4 lg:py-12 max-w-2xl lg:max-w-[650px] xl:max-w-[750px] w-full flex flex-col justify-center relative z-[2]">
               
               {/* DESKTOP VIEWPORT LAYOUT */}
               <div className="hidden lg:block">
@@ -250,7 +250,7 @@ export default function AboutSection() {
                 <div className="relative w-full mt-4 lg:mt-8 overflow-visible h-[280px]">
                   <AnimatePresence mode="wait" custom={scrollDirection}>
                     {!showBackstory ? (
-                      /* Text Chunk 1: Main Intro - Intermediate Larger-sized description split into clean rows */
+                      /* Text Chunk 1: Main Intro - Standard Line-Height Line Break */
                       <motion.div
                         key="intro"
                         custom={scrollDirection}
@@ -263,8 +263,7 @@ export default function AboutSection() {
                       >
                         <p className="text-[17px] lg:text-[19px] xl:text-[21px] text-[#212121]/80 leading-relaxed font-light">
                           I&apos;m Alex, an instructional designer with ten years of hands-on experience.
-                        </p>
-                        <p className="text-[17px] lg:text-[19px] xl:text-[21px] text-[#212121]/80 leading-relaxed font-light mt-4">
+                          <br className="hidden lg:block" />
                           I handle the full picture – from strategy and methodology to scriptwriting and final production.
                         </p>
                       </motion.div>
@@ -293,7 +292,7 @@ export default function AboutSection() {
               </div>
 
               {/* MOBILE ONLY LAYOUT */}
-              <div className="lg:hidden flex flex-col items-start text-left w-full py-2 gap-4">
+              <div className="lg:hidden flex flex-col items-start text-left w-full py-0 gap-2">
                 {/* Mobile Title (Typewriter, Left Aligned) */}
                 <div className="w-full text-left">
                   <motion.h2
@@ -343,9 +342,9 @@ export default function AboutSection() {
                   </motion.h2>
                 </div>
 
-                {/* Mobile Portrait (Enlarged & Centered, Anchoring Line direct underneath with NO empty gap) */}
-                <div className="w-full flex justify-center mt-2">
-                  <div className="relative w-full max-w-[310px] sm:max-w-[350px]">
+                {/* Mobile Portrait (Enlarged & Centered, Anchoring Line directly underneath with NO empty gap) */}
+                <div className="w-full flex justify-center mt-1">
+                  <div className="relative w-[280px] xs:w-[315px] sm:w-[340px]">
                     <div className="relative w-full">
                       <Image
                         src="/images/alex-portrait.webp"
@@ -355,7 +354,7 @@ export default function AboutSection() {
                         className="object-contain object-bottom w-full h-auto"
                         quality={90}
                         priority
-                      />
+                    />
                     </div>
                     {/* Architectural anchoring line keeping flush directly beneath base */}
                     <div className="w-full h-[1px] bg-[#729E84]/30 mt-[-1px] relative z-10" />
@@ -363,7 +362,7 @@ export default function AboutSection() {
                 </div>
 
                 {/* Mobile Opening Line (Full descriptions aligned strictly left, slightly enlarged) */}
-                <div className="w-full text-left mt-2">
+                <div className="w-full text-left mt-1">
                   <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: isTitleRevealed ? 1 : 0, y: isTitleRevealed ? 0 : 10 }}
@@ -375,7 +374,7 @@ export default function AboutSection() {
                 </div>
 
                 {/* Mobile Read More Button (Aligned strictly left) */}
-                <div className="w-full flex justify-start mt-2">
+                <div className="w-full flex justify-start mt-1">
                   <motion.button
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: isTitleRevealed ? 1 : 0, y: isTitleRevealed ? 0 : 10 }}
