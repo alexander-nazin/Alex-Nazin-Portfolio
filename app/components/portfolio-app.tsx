@@ -218,18 +218,20 @@ const PROJECTS: Project[] = [
   },
   {
     id: 8,
-    title: 'Amdocs: Technical Enablement Strategy Rollout',
+    title: 'Amdocs: IT Onboarding',
     category: 'Video Series',
     description: '',
     thumbnail: '/images/thumbnails/amdocs.webp',
+    videoSrc:
+      'https://res.cloudinary.com/dg4ayusok/video/upload/v1782907177/Amdocs_Ready_uxnswd.mp4',
     caseStudy: {
       challenge:
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud.',
+        'New hires at a global tech company need to get through a long list of IT setup tasks from day one – fast, without documentation nobody reads, and without slowing down the start of actual work.',
       approach:
-        'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.',
-      roles: ['Course Architecture', 'Vyond Animation', 'Video Production'],
+        'A series of short, animated videos, each focused on one topic – MFA setup, remote access, data storage, IT support, and more. SMEs provided the core knowledge; I shaped it into a clear narrative, wrote the narration, and built a detailed storyboard scene by scene, giving the client full visibility before production and the animator a complete, unambiguous brief. The series kept evolving over time – updates followed real changes in tools and policies, with additional sets developed for employees from acquired companies and for hiring managers.',
+      roles: ['Scriptwriting & Storyboarding'],
       result:
-        'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint.'
+        'A video program used globally across Amdocs new hires – still actively maintained.'
     }
   }
 ]
